@@ -9,7 +9,7 @@ from typing import Annotated, List
 from zoneinfo import ZoneInfo
 
 from lib import db, jellyfin, audiomuse, common
-from lib.common import UserInfo
+from lib.common import UserInfo, PlaylistInfo
 
 class ErrorResponse(BaseModel):
     detail: str = ""
@@ -29,15 +29,6 @@ class UserLimits(BaseModel):
 class UserServerPlaylistStatus(BaseModel):
     id:str = ""
     inServerPlaylist:bool = False
-class PlaylistInfo(BaseModel):
-    userID:str = ""
-    name:str = ""
-    recents:str = ""
-    favourites:str = ""
-    fingerprint:str = ""
-    alchemyPercent:int = 0
-    freshAlchemy:str = ""
-    songCount:int = 0
 class PlaylistCreated(BaseModel):
     Created:bool = False
     Updated:bool = False

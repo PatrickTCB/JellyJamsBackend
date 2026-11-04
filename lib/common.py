@@ -1,5 +1,6 @@
 import sys
 from difflib import SequenceMatcher
+from pydantic import BaseModel
 
 from lib import db, jellyfin
 
@@ -8,6 +9,17 @@ class UserInfo:
     id:str
     token:str
     host:str
+
+class PlaylistInfo(BaseModel):
+    userID:str = ""
+    name:str = ""
+    recents:str = ""
+    favourites:str = ""
+    fingerprint:str = ""
+    alchemyPercent:int = 0
+    freshAlchemy:str = ""
+    songCount:int = 0
+
 
 def stringToFile(fileName, contentsRaw):
     contents = str(contentsRaw)
@@ -120,7 +132,20 @@ def getUserLimits(userID:str) -> dict:
 def getUserPlaylists(userID:str) -> list:
     q = "SELECT * FROM Playlists WHERE userID = ?"
     d = (userID,)
-    return db.select(query=q, datatuple=d, tableName="Playlists", verbose=False)
+    r = db.select(query=q, datatuple=d, tableName="Playlists", verbose=False)
+    playlists = []
+    for row in r:
+        playlist = PlaylistInfo()
+        playlist.alchemyPercent = row["alchemyPercent"]
+        playlist.favourites = row["favourites"]
+        playlist.fingerprint = row["fingerprint"]
+        playlist.freshAlchemy = row["freschAlchemy"]
+        playlist.name = row["name"]
+        playlist.songCount = row["songCount"]
+        playlist.recents = row["recents"]
+        playlist.userID = row["userID"]
+        playlists.append(playlist)
+    return playlists
 
 def playlistExists(userInfo:UserInfo, playlistName:str):
     p = jellyfin.getPlaylistBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, playlistName=playlistName)
