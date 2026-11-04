@@ -1,0 +1,103 @@
+services:
+  playlist-builder:
+    build: 
+      context: .
+      dockerfile: Dockerfile.playlist-builder
+    container_name: jellyjams-playlist-builder
+    restart: unless-stopped
+    environment:
+      - DB_PW=${DB_PW}
+      - PLAYLIST_SUFFIX=${PLAYLIST_SUFFIX}
+      - SERVER_PLAYLIST=${SERVER_PLAYLIST}
+      - AUDIOMUSE_USER=${AUDIOMUSE_USER}
+      - AUDIOMUSE_PW=${AUDIOMUSE_PW}
+      - AUDIOMUSE_HOST=${AUDIOMUSE_HOST}
+    volumes:
+      - ${SHARED_DATA}:/data
+  rest-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile.rest-api
+    hostname: jellyjams-rest
+    container_name: jellyjams-backend
+    restart: unless-stopped
+    ports:
+      - ${REST_IP}:${REST_PORT}:8000
+    environment:
+      - DB_PW=${DB_PW}
+      - PLAYLIST_SUFFIX=${PLAYLIST_SUFFIX}
+      - SERVER_PLAYLIST=${SERVER_PLAYLIST}
+      - AUDIOMUSE_USER=${AUDIOMUSE_USER}
+      - AUDIOMUSE_PW=${AUDIOMUSE_PW}
+      - AUDIOMUSE_HOST=${AUDIOMUSE_HOST}
+    volumes:
+      - ${SHARED_DATA}:/data
+  custodian:
+    build: 
+      context: .
+      dockerfile: Dockerfile.custodian
+    container_name: jellyjams-custodian
+    restart: unless-stopped
+    environment:
+      - DB_PW=${DB_PW}
+      - SERVER_PLAYLIST=${SERVER_PLAYLIST}
+    volumes:
+      - ${SHARED_DATA}:/data
+  
+  # PostgreSQL database service
+  postgres:
+    image: postgres:15-alpine
+    container_name: audiomuse-postgres
+    environment:
+      TZ: "${AUDIOMUSE_TZ}"
+      POSTGRES_USER: ${AUDIOMUSE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUDIOMUSE_POSTGRES_PASSWORD}
+      POSTGRES_DB: "audiomusedb"
+    ports:
+      - "${AUDIOMUSE_POSTGRES_PORT}:5432" # Expose PostgreSQL port to the host
+    volumes:
+      - ${AUDIOMUSE_POSTGRES_DATA}:/var/lib/postgresql/data # Persistent storage for PostgreSQL data
+    restart: unless-stopped
+  # AudioMuse-AI Flask application service
+  audiomuse-ai-flask:
+    image: ghcr.io/neptunehub/audiomuse-ai:latest # Reflects deployment.yaml
+    container_name: audiomuse-ai-flask-app
+    hostname: audiomuse
+    ports:
+      - "${AUDIOMUSE_PORT}:8000" # Map host port 8000 to container port 8000
+    environment:
+      SERVICE_TYPE: "flask" # Tells the container to run the Flask app
+      TZ: "${AUDIOMUSE_TZ}"
+      # DATABASE_URL is now constructed by config.py from the following:
+      POSTGRES_USER: ${AUDIOMUSE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUDIOMUSE_POSTGRES_PASSWORD}
+      POSTGRES_DB: "audiomusedb"
+      POSTGRES_HOST: "postgres" # Service name of the postgres container
+      POSTGRES_PORT: "5432" # Internal port - always 5432 inside the Docker network
+      TEMP_DIR: "/app/temp_audio"
+    volumes:
+      - ${AUDIOMUSE_AUDIO_FOLDER}:/app/temp_audio # Volume for temporary audio files
+      - ${AUDIOMUSE_PLUGINS}:/app/plugin/installed # This container's own plugins cache (code + pip deps)
+    depends_on:
+      - postgres
+    restart: unless-stopped
+  # AudioMuse-AI Queue Worker service
+  audiomuse-ai-worker:
+    image: ghcr.io/neptunehub/audiomuse-ai:latest # Reflects deployment.yaml
+    container_name: audiomuse-ai-worker-instance
+    environment:
+      SERVICE_TYPE: "worker" # Tells the container to run the queue workers
+      TZ: "${AUDIOMUSE_TZ}"
+      # DATABASE_URL is now constructed by config.py from the following:
+      POSTGRES_USER: ${AUDIOMUSE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUDIOMUSE_POSTGRES_PASSWORD}
+      POSTGRES_DB: "audiomusedb"
+      POSTGRES_HOST: "postgres" # Service name of the postgres container
+      POSTGRES_PORT: "5432" # Internal port - always 5432 inside the Docker network
+      TEMP_DIR: "/app/temp_audio"
+    volumes:
+      - ${AUDIOMUSE_AUDIO_FOLDER}:/app/temp_audio # Volume for temporary audio files
+      - ${AUDIOMUSE_PLUGINS}:/app/plugin/installed # This container's own plugins cache (code + pip deps)
+    depends_on:
+      - postgres
+    restart: unless-stopped
