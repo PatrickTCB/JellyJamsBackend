@@ -139,7 +139,7 @@ def getUserPlaylists(userID:str) -> list:
         playlist.alchemyPercent = row["alchemyPercent"]
         playlist.favourites = row["favourites"]
         playlist.fingerprint = row["fingerprint"]
-        playlist.freshAlchemy = row["freschAlchemy"]
+        playlist.freshAlchemy = row["freshAlchemy"]
         playlist.name = row["name"]
         playlist.songCount = row["songCount"]
         playlist.recents = row["recents"]
