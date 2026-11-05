@@ -13,6 +13,7 @@ RUN pip3 install urllib3
 RUN pip3 install requests
 RUN pip3 install sqlcipher3
 RUN pip3 install kafka-python
+RUN pip3 install pydantic
 
 RUN mkdir app
 ADD ./custodian/ app/
