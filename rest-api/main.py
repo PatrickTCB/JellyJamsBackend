@@ -152,6 +152,33 @@ def savePlaylistInfo(userID:str, name:str, recents:bool, favourites:bool, finger
     p.songCount = songCount
     return p
 
+def getJellyfinSimilarArtists(userInfo: UserInfo, artistID:str) -> list:
+    similarArtists = []
+    jfArtists = jellyfin.getSimilarArtists(host=userInfo.host, token=userInfo.token, userID=userInfo.id, artistId=artistID, limit=10)
+    for jfArtist in jfArtists["Items"]:
+        artist = {}
+        artist["artist_id"] = jfArtist["Id"]
+        artistTracks = 0
+        artistExtraParams = {
+            "parentId": jfArtist["Id"],
+            "sortOrder": "Ascending",
+            "includeItemTypes": "MusicAlbum",
+            "sortBy": "PremiereDate"
+        }
+        artistAlbums = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=artistExtraParams)
+        for album in artistAlbums:
+            albumExtraParams = {
+                "parentId": album["Id"],
+                "sortOrder": "Ascending",
+                "includeItemTypes": "Audio",
+                "sortBy": "IndexNumber"
+            }
+            albumTracks = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=albumExtraParams)
+            artistTracks = artistTracks + len(albumTracks["Items"])
+        artist["track_count"] = artistTracks
+        similarArtists.append(artist)
+    return similarArtists
+
 def getNextAlbum(userInfo:UserInfo, albumID:str) -> str:
     nextAlbumID = ""
     userBans = common.getUserBans(userID=userInfo.id)
@@ -198,30 +225,8 @@ def getNextAlbum(userInfo:UserInfo, albumID:str) -> str:
             similarArtists = audiomuse.similarArtists(artistName=albumInfo["AlbumArtist"], numberOfArtists=10)
         except Exception as e:
             print("Couldn't get similar artists from audiomuse. I'll try getting them from Jellyfin.")
-            similarArtists = []
-            jfArtists = jellyfin.getSimilarArtists(host=userInfo.host, token=userInfo.token, userID=userInfo.id, artistId=albumInfo["ParentId"], limit=10)
-            for jfArtist in jfArtists["Items"]:
-                artist = {}
-                artist["artist_id"] = jfArtist["Id"]
-                artistTracks = 0
-                artistExtraParams = {
-                    "parentId": artist["artist_id"],
-                    "sortOrder": "Ascending",
-                    "includeItemTypes": "MusicAlbum",
-                    "sortBy": "PremiereDate"
-                }
-                artistAlbums = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=artistExtraParams)
-                for album in artistAlbums:
-                    albumExtraParams = {
-                        "parentId": album["Id"],
-                        "sortOrder": "Ascending",
-                        "includeItemTypes": "Audio",
-                        "sortBy": "IndexNumber"
-                    }
-                    albumTracks = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=albumExtraParams)
-                    artistTracks = artistTracks + len(albumTracks["Items"])
-                artist["track_count"] = artistTracks
-                similarArtists.append(artist)
+        if len(similarArtists) == 0:
+            similarArtists = getJellyfinSimilarArtists(userInfo=userInfo, artistID=albumInfo["ParentId"])
             print("Got {} similar artists from Jellyfin.".format(len(similarArtists)))
         candidateAlbums = []
         print("Found {} similar artists. Checking for albums with at least 5 songs.".format(len(similarArtists)))
