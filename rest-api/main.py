@@ -166,7 +166,7 @@ def getJellyfinSimilarArtists(userInfo: UserInfo, artistID:str) -> list:
             "sortBy": "PremiereDate"
         }
         artistAlbums = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=artistExtraParams)
-        for album in artistAlbums:
+        for album in artistAlbums["Items"]:
             albumExtraParams = {
                 "parentId": album["Id"],
                 "sortOrder": "Ascending",
