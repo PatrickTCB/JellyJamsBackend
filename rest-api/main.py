@@ -221,6 +221,7 @@ def getNextAlbum(userInfo:UserInfo, albumID:str) -> str:
                     albumTracks = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=albumExtraParams)
                     artistTracks = artistTracks + len(albumTracks["Items"])
                 artist["track_count"] = artistTracks
+                similarArtists.append(artist)
             print("Got {} similar artists from Jellyfin.".format(len(similarArtists)))
         candidateAlbums = []
         print("Found {} similar artists. Checking for albums with at least 5 songs.".format(len(similarArtists)))
