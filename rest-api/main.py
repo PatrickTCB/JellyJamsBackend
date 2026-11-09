@@ -602,9 +602,9 @@ async def text_to_tunes(request:Request, userID:str, query:str, limit:int=50) ->
         print("User {} could not be found".format(userID))
         raise HTTPException(status_code=404, detail="User {} not found".format(userID))
     # User does exist
-    alchemySongs = audiomuse.clap(query=query, limit=limit)
+    alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
     alchemySongIDs = []
-    for song in alchemySongs["results"]:
+    for song in alchemySongs:
         # Respect the user's bans
         banned = False
         jellyfinItem = jellyfin.item(host=userInfo.host, token=userInfo.token, userID=userInfo.id, itemID=song["item_id"])
