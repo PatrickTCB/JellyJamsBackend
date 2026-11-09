@@ -1,3 +1,4 @@
+import json
 import requests
 import sys
 import os
@@ -16,12 +17,16 @@ def auth(host:str, user:str, pw:str) -> RequestsCookieJar:
 
 def sonicFingerprint(userID:str, userToken:str, songCount:int) -> list:
     host=os.environ['AUDIOMUSE_HOST']
-    cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     path = "/api/sonic_fingerprint/generate"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
+    if "AUDIOMUSE_API_KEY" in os.environ:
+        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     body = {
         "n": songCount,
         "jellyfin_user_identifier": userID,
@@ -35,12 +40,16 @@ def sonicFingerprint(userID:str, userToken:str, songCount:int) -> list:
     
 def alchemy(addSongs:list[str], subtractSongs:list[str]=[], songLimit:int=50) -> list:
     host=os.environ['AUDIOMUSE_HOST']
-    cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     path = "/api/alchemy"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
+    if "AUDIOMUSE_API_KEY" in os.environ:
+        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     items = []
     for song in addSongs:
         s = {
@@ -71,12 +80,16 @@ def alchemy(addSongs:list[str], subtractSongs:list[str]=[], songLimit:int=50) ->
 
 def clap(query:str, limit:int) -> dict:
     host=os.environ['AUDIOMUSE_HOST']
-    cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     path = "/api/clap/search"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
+    if "AUDIOMUSE_API_KEY" in os.environ:
+        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     body = {
         "query": query,
         "limit": limit
@@ -87,14 +100,45 @@ def clap(query:str, limit:int) -> dict:
         print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
     return r.json()
 
+def instantPlaylist(query:str, limit:int) -> dict:
+    host=os.environ['AUDIOMUSE_HOST']
+    path = "/chat/api/chatPlaylistStream"
+    headers = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    if "AUDIOMUSE_API_KEY" in os.environ:
+        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
+    body = {
+        "userInput": query,
+        "ai_provider": "OLLAMA",
+        "ai_model": "flint:latest",
+        "n": limit,
+        "ollama_server_url": "https://ollama.aseriesoftubes.net/api/generate"
+    }
+    url = "{}{}".format(host, path)
+    r = requests.post(url=url, headers=headers, json=body)
+    resp = str(r.text.split("\n")[-3]).replace("data: ", "")
+    if r.status_code != 200:
+        print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
+    jr = json.loads(resp)
+    return jr["response"]["query_results"]
+
 def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
     host=os.environ['AUDIOMUSE_HOST']
-    cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     path = "/api/similar_artists"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
+    if "AUDIOMUSE_API_KEY" in os.environ:
+        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
     params = {
         "artist": artistName,
         "n": numberOfArtists,
