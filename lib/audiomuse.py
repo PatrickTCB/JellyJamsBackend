@@ -22,7 +22,7 @@ def sonicFingerprint(userID:str, userToken:str, songCount:int) -> list:
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
-    if "AUDIOMUSE_API_KEY" in os.environ:
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
         headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
@@ -45,7 +45,7 @@ def alchemy(addSongs:list[str], subtractSongs:list[str]=[], songLimit:int=50) ->
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
-    if "AUDIOMUSE_API_KEY" in os.environ:
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
         headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
@@ -85,7 +85,7 @@ def clap(query:str, limit:int) -> dict:
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
-    if "AUDIOMUSE_API_KEY" in os.environ:
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
         headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
@@ -107,7 +107,7 @@ def instantPlaylist(query:str, limit:int) -> list:
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
-    if "AUDIOMUSE_API_KEY" in os.environ:
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
         headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
@@ -134,7 +134,7 @@ def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
         "Content-Type": "application/json",
         "Cache-Control": "no-cache"
     }
-    if "AUDIOMUSE_API_KEY" in os.environ:
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
         headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
