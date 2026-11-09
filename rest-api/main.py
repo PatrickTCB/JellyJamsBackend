@@ -423,8 +423,24 @@ async def extend_queue(request:Request, userID:str, existingQueue:str) -> Extend
         print("User {} could not be found".format(userID))
         raise HTTPException(status_code=404, detail="User {} not found".format(userID))
     # User does exist
-    # So now the user is listening to some music, and needs 5 more songs on
-    # the queue. So we use alchemy based on the list so far to get them.
+    # Alchemy requires at least 2 songs, but a user might actually just send one
+    # so I should handle that possibility right away
+    if len(existingQueueList) < 2:
+        print("Existing queue was only {} song(s) long and alchemy requires 2 or more songs. Grabbing 2 favourites".format(len(existingQueueList)))
+        rawFavs = jellyfin.favourites(host=userInfo.host, token=userInfo.token, userID=userInfo.id)
+        NewTrackIDs = []
+        favs = []
+        for song in rawFavs["Items"]:
+            favs.append(song["Id"])
+        if len(favs) > 2:
+            NewTrackIDs = random.sample(favs, 2)
+        else:
+            NewTrackIDs = favs
+        r = ExtendedQueue()
+        r.NewTrackIDs = NewTrackIDs
+        r.Count = len(r.NewTrackIDs)
+        return r
+    # If I'm here, then the users queue is over 2 and needs up to 5 more songs
     r = ExtendedQueue()
     r.NewTrackIDs = alchemySongs(userInfo=userInfo, sourceSongs=existingQueueList, songLimit=extendBy)
     r.Count = len(r.NewTrackIDs)
@@ -643,7 +659,6 @@ async def text_to_tunes(request:Request, userID:str, query:str, limit:int=50) ->
         alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
     except Exception as e:
         print("Couldn't get any songs from audiomuse. Check the logs there.{}\n".format(e))
-        alchemySongs = {}
         alchemySongs = []
     alchemySongIDs = []
     for song in alchemySongs:
