@@ -152,6 +152,33 @@ def savePlaylistInfo(userID:str, name:str, recents:bool, favourites:bool, finger
     p.songCount = songCount
     return p
 
+def getJellyfinSimilarArtists(userInfo: UserInfo, artistID:str) -> list:
+    similarArtists = []
+    jfArtists = jellyfin.getSimilarArtists(host=userInfo.host, token=userInfo.token, userID=userInfo.id, artistId=artistID, limit=10)
+    for jfArtist in jfArtists["Items"]:
+        artist = {}
+        artist["artist_id"] = jfArtist["Id"]
+        artistTracks = 0
+        artistExtraParams = {
+            "parentId": jfArtist["Id"],
+            "sortOrder": "Ascending",
+            "includeItemTypes": "MusicAlbum",
+            "sortBy": "PremiereDate"
+        }
+        artistAlbums = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=artistExtraParams)
+        for album in artistAlbums["Items"]:
+            albumExtraParams = {
+                "parentId": album["Id"],
+                "sortOrder": "Ascending",
+                "includeItemTypes": "Audio",
+                "sortBy": "IndexNumber"
+            }
+            albumTracks = jellyfin.getItemBySearch(host=userInfo.host, token=userInfo.token, userID=userInfo.id, extraParams=albumExtraParams)
+            artistTracks = artistTracks + len(albumTracks["Items"])
+        artist["track_count"] = artistTracks
+        similarArtists.append(artist)
+    return similarArtists
+
 def getNextAlbum(userInfo:UserInfo, albumID:str) -> str:
     nextAlbumID = ""
     userBans = common.getUserBans(userID=userInfo.id)
@@ -191,10 +218,16 @@ def getNextAlbum(userInfo:UserInfo, albumID:str) -> str:
                 # it'll be this artists next album, and that's what
                 # we should return
                 foundCurrent = True
-        # At this point in the code path, there is no valid "next"
-        # album by this artist. So I'll get a random album from 
-        # a similar artist
-        similarArtists = audiomuse.similarArtists(artistName=albumInfo["AlbumArtist"], numberOfArtists=10)
+        try:
+            # At this point in the code path, there is no valid "next"
+            # album by this artist. So I'll get a random album from 
+            # a similar artist
+            similarArtists = audiomuse.similarArtists(artistName=albumInfo["AlbumArtist"], numberOfArtists=10)
+        except Exception as e:
+            print("Couldn't get similar artists from audiomuse. I'll try getting them from Jellyfin.")
+        if len(similarArtists) == 0:
+            similarArtists = getJellyfinSimilarArtists(userInfo=userInfo, artistID=albumInfo["ParentId"])
+            print("Got {} similar artists from Jellyfin.".format(len(similarArtists)))
         candidateAlbums = []
         print("Found {} similar artists. Checking for albums with at least 5 songs.".format(len(similarArtists)))
         for artist in similarArtists:
@@ -263,7 +296,11 @@ def alchemySongs(userInfo:UserInfo, sourceSongs:list[str], songLimit:int):
             alchemyAdd.append(song)
         else:
             alchemySubtract.append(song)
-    alchemySongs = audiomuse.alchemy(addSongs=alchemyAdd, subtractSongs=alchemySubtract, songLimit=(int(songLimit * 2)))
+    try:
+        alchemySongs = audiomuse.alchemy(addSongs=alchemyAdd, subtractSongs=alchemySubtract, songLimit=(int(songLimit * 2)))
+    except Exception as e:
+        print("Couldn't get alchemy songs from audiomuse. Check the logs of that container")
+        alchemySongs = []
     alchemySongIDs = []
     for song in alchemySongs:
         # Respect the user's bans
@@ -602,7 +639,12 @@ async def text_to_tunes(request:Request, userID:str, query:str, limit:int=50) ->
         print("User {} could not be found".format(userID))
         raise HTTPException(status_code=404, detail="User {} not found".format(userID))
     # User does exist
-    alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
+    try:
+        alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
+    except Exception as e:
+        print("Couldn't get any songs from audiomuse. Check the logs there.{}\n".format(e))
+        alchemySongs = {}
+        alchemySongs = []
     alchemySongIDs = []
     for song in alchemySongs:
         # Respect the user's bans

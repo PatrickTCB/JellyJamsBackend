@@ -100,7 +100,7 @@ def clap(query:str, limit:int) -> dict:
         print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
     return r.json()
 
-def instantPlaylist(query:str, limit:int) -> dict:
+def instantPlaylist(query:str, limit:int) -> list:
     host=os.environ['AUDIOMUSE_HOST']
     path = "/chat/api/chatPlaylistStream"
     headers = {
@@ -148,4 +148,14 @@ def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
     r = requests.get(url=url, headers=headers, cookies=cookies, params=params)
     if r.status_code != 200:
         print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
-    return r.json()
+    rj = r.json()
+    if type(rj) == type({}):
+        if "error" in rj.keys():
+            print("ERROR: audiomuse did not return artists")
+            for k in rj.keys():
+                print("{}: {}".format(k, rj[k]))
+        # If it's an error, I print the error but even it's not I expected a list
+        # and so will return an empty one and just get the info from Jellyfin.
+        return []
+    else:
+        return rj

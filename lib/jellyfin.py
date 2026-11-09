@@ -236,6 +236,24 @@ def getItemBySearch(host:str, token:str, userID:str, searchTerm:str="", extraPar
         print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
     return r.json()
 
+def getSimilarArtists(host:str, token:str, userID:str, artistId:str="", limit:int=10, verbose=False) -> dict:
+    # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    jPath = "/Artists/{}/Similar".format(artistId)
+    params = {
+        "userId": userID,
+        "limit": "{}".format(limit),
+        "recursive": "true"
+    }
+    headers = {
+        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Accept": "application/json"
+    }
+    url = "{}{}".format(host, jPath)
+    r = requests.get(url=url, headers=headers, params=params)
+    if r.status_code != 200:
+        print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
+    return r.json()
+
 def createPlaylist(host:str, token:str, userID:str, name:str, items:list=[]):
     body = {
         "Name": name,
