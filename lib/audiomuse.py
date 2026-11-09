@@ -23,7 +23,7 @@ def sonicFingerprint(userID:str, userToken:str, songCount:int) -> list:
         "Cache-Control": "no-cache"
     }
     if "AUDIOMUSE_API_KEY" in os.environ:
-        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
         cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
@@ -46,7 +46,7 @@ def alchemy(addSongs:list[str], subtractSongs:list[str]=[], songLimit:int=50) ->
         "Cache-Control": "no-cache"
     }
     if "AUDIOMUSE_API_KEY" in os.environ:
-        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
         cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
@@ -86,7 +86,7 @@ def clap(query:str, limit:int) -> dict:
         "Cache-Control": "no-cache"
     }
     if "AUDIOMUSE_API_KEY" in os.environ:
-        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
         cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
@@ -108,7 +108,7 @@ def instantPlaylist(query:str, limit:int) -> list:
         "Cache-Control": "no-cache"
     }
     if "AUDIOMUSE_API_KEY" in os.environ:
-        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
         cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
@@ -135,7 +135,7 @@ def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
         "Cache-Control": "no-cache"
     }
     if "AUDIOMUSE_API_KEY" in os.environ:
-        headers["Authorization"] = "Bearer: {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
         cookies = RequestsCookieJar()
     else:
         cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
