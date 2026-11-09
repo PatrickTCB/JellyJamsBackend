@@ -132,7 +132,7 @@ The three containers from this repo share one database. It's an SQLCipher-encryp
 
    These two jobs are the long part. You should keep going through these steps, just keep in mind that these jobs won't be done for a long while.
 
-6. **Hand the backend its AudioMuse login.** Once the account from step 5 exists, set `AUDIOMUSE_USER` and `AUDIOMUSE_PW` in `.env` to those credentials and re-apply:
+6. **Hand the backend its AudioMuse login.** Once the account from step 5 exists, set either `AUDIOMUSE_USER` and `AUDIOMUSE_PW` or `AUDIOMUSE_API_KEY` in `.env` to the credentials you set and re-apply:
 
    ```sh
    docker compose up --build -d
@@ -178,6 +178,7 @@ All variables live in `.env` (see `env.example`). Grouped by what consumes them:
 | `AUDIOMUSE_HOST` | `"http://audiomuse"` | URL the backend containers use to reach the AudioMuse API. The default works because the compose file names the flask container `audiomuse`; only change it if you run AudioMuse outside this compose stack or if you put Audio-Muse-AI behind a reverse proxy and want that to be the primary way in. |
 | `AUDIOMUSE_USER` | `admin` | The AudioMuse login (created in step 5 of Setup) that `playlist-builder` & co. use for API calls. |
 | `AUDIOMUSE_PW` | `probably-shouldnt-be-admin` | Password for that user. Pick a real one. |
+| `AUDIOMUSE_API_KEY` | `really-shouldnt-be-admin` | This API key can be used instead of a username and password. If it's set then the username and pw variables won't be used. |
 | `AUDIOMUSE_PORT` | `8000` | Host port the AudioMuse web UI is published on. |
 | `AUDIOMUSE_TZ` | `"Europe/Berlin"` | Timezone for all the AudioMuse containers (Postgres, web UI, and worker), including AudioMuse's scheduled tasks. |
 | `AUDIOMUSE_POSTGRES_USER` | `audiomuse` | Postgres user for AudioMuse's database. No need to change it. |
@@ -229,7 +230,7 @@ See `/redoc` or `/docs` for more details and response models.
 
 ## Troubleshooting
 
-- **`playlist-builder` / `rest-api` logs show AudioMuse auth errors.** `AUDIOMUSE_USER` / `AUDIOMUSE_PW` don't match the account you created in the AudioMuse web UI (setup step 5 → 6). Fix `.env`, then `docker compose up -d`.
+- **`playlist-builder` / `rest-api` logs show AudioMuse auth errors.** `AUDIOMUSE_USER` / `AUDIOMUSE_PW` and/or `AUDIOMUSE_API_KEY` don't match the account you created in the AudioMuse web UI (setup step 5 → 6). Fix `.env`, then `docker compose up -d`.
 - **"Couldn't get playback info for …" or mixtapes with no recent-listen tracks.** The Playback Reporting plugin is missing, or the registered Jellyfin user lacks admin access (the playback-history endpoint requires it).
 - **The app can't reach the backend.** The REST port is published on `${REST_IP}`, which defaults to `127.0.0.1` — loopback only. Set `REST_IP` to the server's LAN/Tailscale IP (or `0.0.0.0`) and `docker compose up -d` to republish. See [Networking](#networking).
 - **My mixtape disappeared and came back a minute later.** Expected: AudioMuse-AI deletes all `_automatic` playlists when it rebuilds its own, and the playlist-builder restores yours within ~2 minutes.
