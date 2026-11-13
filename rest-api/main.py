@@ -77,7 +77,7 @@ def saveUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
     db.insert(query=q, datatuple=d, tableName="Users")
 
 def updateUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
-    q = "DELETE FROM Users WHERE userID = ?"
+    q = "DELETE FROM Users WHERE id = ?"
     d = (userID,)
     db.delete(query=q, datatuple=d, tableName="Users")
     q = "INSERT INTO Users VALUES(?,?,?,?)"
