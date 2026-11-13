@@ -23,7 +23,7 @@ for user in users:
         print("Couldn't get favourite songs for {}.\nProbably an error worth fixing before setting up your own custom job.".format(user.name))
         print(e)
         favouriteSongs = {"Items": []}
-    if len(favouriteSongs) > 0 and len(userPlaylists) > 0:
+    if len(favouriteSongs["Items"]) > 0 and len(userPlaylists["Items"]) > 0:
         randomPlaylist = random.choice(userPlaylists["Items"])
         randomSong = random.choice(favouriteSongs["Items"])
         print("I could have added '{song}' by '{artist}' to '{playlist}', that would've been cool.".format(song=randomSong["Name"], artist=" & ".join(randomSong["Artists"]), playlist=randomPlaylist["Name"]))
