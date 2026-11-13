@@ -8,7 +8,6 @@
 # rebuild them if they exist but are over ~23.5h old.
 echo "Container started `date`"
 python3 -u setup.py
-echo "db setup done"
 while true; do
     echo "====="
     echo `date`
