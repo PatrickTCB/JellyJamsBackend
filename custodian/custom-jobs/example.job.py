@@ -10,7 +10,7 @@ print("Example job starting at {} and doing super cool stuff.".format(int(dateti
 # Run job per user
 users = common.getUsers()
 for user in users:
-    print("Imagine I just did something cool and helpful for user {}".format(user.id))
+    print("===\nHere is where I could do something cool and helpful for user {}".format(user.name))
     try:
         userPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
     except Exception as e:
