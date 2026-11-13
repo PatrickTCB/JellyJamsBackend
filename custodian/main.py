@@ -26,6 +26,7 @@ print("New task loop starting at {}.".format(int(datetime.now().timestamp())))
 # Per user jobs
 users = common.getUsers()
 for user in users:
+    print("---\nStarting standard jobs for {}.".format(user.name))
     oldMixtapeHash = getOldMixtapeHash(userID=user.id)
     # Job 1: Scrub bans from _automatic playlists
     userBans = common.getUserBans(userID=user.id)
