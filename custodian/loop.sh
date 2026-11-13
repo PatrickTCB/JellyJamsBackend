@@ -18,6 +18,6 @@ while true; do
         echo "===== $job"
         python3 -u "$job" || echo "$job exited with status $?"
     done
-    echo -ne "Sleeping for 2m"\\r
+    echo "Sleeping for 2m"
     sleep 120
 done
