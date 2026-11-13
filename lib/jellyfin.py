@@ -187,6 +187,24 @@ def library(host:str, token:str, userID:str, verbose:bool=False) -> dict:
         print("Received all Jellyfin Items from {}.".format(host))
     return r.json()
 
+def getAllPlaylists(host:str, token:str, userID:str, verbose=False) -> dict:
+    # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    jPath = "/Items"
+    params = {
+        "userId": userID,
+        "recursive": "true",
+        "includeItemTypes": "Playlist"
+    }
+    headers = {
+        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Accept": "application/json"
+    }
+    url = "{}{}".format(host, jPath)
+    r = requests.get(url=url, headers=headers, params=params)
+    if r.status_code != 200:
+        print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
+    return r.json()
+
 def getPlaylistBySearch(host:str, token:str, userID:str, playlistName:str, limit:int=100, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
     jPath = "/Items"
