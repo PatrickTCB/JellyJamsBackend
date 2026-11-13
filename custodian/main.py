@@ -41,6 +41,7 @@ for user in users:
         # The playlists have changed since they were last checked. The should be checked for
         # banable songs. 
         for tape in mixtapes["Items"]:
+            print("Checking out {} for {}".format(tape["Name"], user.name))
             if tape["Name"] == "{}_automatic".format(os.environ["SERVER_PLAYLIST"]):
                 print("Won't remove user ignores from the family blend")
             else:
