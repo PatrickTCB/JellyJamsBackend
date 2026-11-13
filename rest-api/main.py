@@ -85,13 +85,13 @@ def updateUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
     db.insert(query=q, datatuple=d, tableName="Users")
 
 def deleteUser(userID:str, userName:str, userToken:str, jellyfinHost:str):
-    q = "DELETE FROM Users WHERE userID = ? AND userName = ? AND userToken = ? AND jellyfinHost = ?"
+    q = "DELETE FROM Users WHERE id = ? AND userName = ? AND userToken = ? AND jellyfinHost = ?"
     d = (userID,userName,userToken,jellyfinHost)
     db.delete(query=q, datatuple=d, tableName="Users")
     # Delete from other tables
     tables = ["ServerPlaylist", "Bans", "Playlists", "PlaylistBuilds", "userLimits"]
     for table in tables:
-        q = "DELETE FROM {} WHERE userID = ?".format(table)
+        q = "DELETE FROM {} WHERE id = ?".format(table)
         d = (userID,)
         db.delete(query=q, datatuple=d, tableName=table)
 
