@@ -15,8 +15,9 @@ while true; do
     echo "Standard custodian jobs done"
     echo "====="
     for job in custom-jobs/*.py; do
-        echo "===== $job"
-        python3 -u "$job" || echo "$job exited with status $?"
+        echo "====="
+        echo "Starting $job"
+        python3 -u "$job"
     done
     echo "Sleeping for 2m"
     sleep 120
