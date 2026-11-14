@@ -24,7 +24,7 @@ def saveMixtapHash(userID, hash):
 
 # Per user jobs
 users = common.getUsers()
-print("New task loop for {} users starting at {}.".format(int(datetime.now().timestamp()), len(users)))
+print("New task loop for {} users starting at {}.".format(len(users), int(datetime.now().timestamp())))
 for user in users:
     print("---\nStarting standard jobs for {}.".format(user.name))
     oldMixtapeHash = getOldMixtapeHash(userID=user.id)
