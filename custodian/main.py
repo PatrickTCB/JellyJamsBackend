@@ -22,9 +22,9 @@ def saveMixtapHash(userID, hash):
     d = (now,userID,hash)
     db.insert(query=q, datatuple=d, tableName="MixtapeHash")
 
-print("New task loop starting at {}.".format(int(datetime.now().timestamp())))
 # Per user jobs
 users = common.getUsers()
+print("New task loop for {} users starting at {}.".format(int(datetime.now().timestamp()), len(users)))
 for user in users:
     print("---\nStarting standard jobs for {}.".format(user.name))
     oldMixtapeHash = getOldMixtapeHash(userID=user.id)
