@@ -13,6 +13,9 @@ db.create(useExisting=True, verbose=False)
 # Create 'Users' table if it doesn't exist
 usersColumns = ["id", "name", "token", "jellyfinHost"]
 db.table(tableName="Users", tableColumns=usersColumns, verbose=False)
+# Create 'UsersVerification' table if it doesn't exist
+usersColumns = ["id", "name", "code", "jellyfinHost"]
+db.table(tableName="UserVerification", tableColumns=usersColumns, verbose=False)
 # Create 'Bans' table
 banColumns = ["userID", "id"]
 db.table(tableName="Bans", tableColumns=banColumns)
