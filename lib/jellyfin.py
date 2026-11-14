@@ -23,7 +23,13 @@ def quickConnectCheck(host:str, secret:str):
     }
     url = "{}{}".format(host, path)
     d = requests.get(url=url, headers=headers, params=params)
-    return d.json()
+    if d.status_code == 200:
+        resp = d.json()
+        resp["Expired"] = False
+        return resp
+    else:
+        resp = {"Authenticated": False, "Expired": True}
+        return resp
 
 def quickConnectAuthorize(host:str, secret:str, userID:str):
     authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Version=\"1.x\"".format(userID)
