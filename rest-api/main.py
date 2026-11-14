@@ -1,5 +1,6 @@
 import os
 import random
+import threading
 
 from fastapi import FastAPI, Form, Request, Response, HTTPException
 
@@ -17,6 +18,7 @@ class UserCreated(BaseModel):
     User:str = ""
     Created:bool = False
     Saved:bool = False
+    Code:str = ""
     PlaylistSuffix:str = "_automatic"
     ServerPlaylist:str = ""
 class UserInfoMinimal(BaseModel):
@@ -72,17 +74,25 @@ def serverPlaylistRemoval(userID:str):
     db.delete(query=q, datatuple=d, tableName="ServerPlaylist")
 
 def saveUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
-    q = "INSERT INTO Users VALUES(?,?,?,?)"
-    d = (userID,userName,userToken,jellyfinHost)
-    db.insert(query=q, datatuple=d, tableName="Users")
-
-def updateUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
     q = "DELETE FROM Users WHERE id = ?"
     d = (userID,)
     db.delete(query=q, datatuple=d, tableName="Users")
     q = "INSERT INTO Users VALUES(?,?,?,?)"
     d = (userID,userName,userToken,jellyfinHost)
     db.insert(query=q, datatuple=d, tableName="Users")
+
+def quickConnect(host:str, secret:str, userName:str, userID:str):
+    print("Starting quick connect process for {}".format(userName))
+    retry = True
+    check = jellyfin.quickConnectCheck(host=host, secret=secret)
+    while retry:
+        if check["Authenticated"]:
+            print("Authentication worked.")
+            retry = False
+    auth = jellyfin.quickConnectAuthorize(host=host, secret=secret, userID=userID)
+    print("Saving authentication info for {}".format(auth["User"]["Name"]))
+    saveUserInfo(userID=auth["User"]["Id"], userName=auth["User"]["Name"], userToken=auth["AccessToken"], jellyfinHost=host)
+    pass
 
 def deleteUser(userID:str, userName:str, userToken:str, jellyfinHost:str):
     q = "DELETE FROM Users WHERE id = ? AND userName = ? AND userToken = ? AND jellyfinHost = ?"
@@ -481,11 +491,14 @@ async def new_user(requset:Request,response: Response, userName:Annotated[str, F
     userInfo = common.getUserInfo(userID=userID)
     if userInfo is not None:
         print("User {} already exists.".format(userID))
-        updateUserInfo(userID=userID, userName=userName, userToken=userToken, jellyfinHost=jellyfinHost)
+        qc = jellyfin.quickConnectInitialize(host=jellyfinHost, userID=userID)
+        thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], userName, userID))
+        thread.start()
         r = UserCreated()
         r.User = userName
         r.Created = False
         r.Saved = True
+        r.Code = qc["Code"]
         r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
         r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
         response.status_code = 200
@@ -496,11 +509,14 @@ async def new_user(requset:Request,response: Response, userName:Annotated[str, F
     if "Id" in user.keys():
         if user["Id"] == userID:
             print("Credentials for {} seem valid and will be saved.".format(userName))
-            saveUserInfo(userID=userID, userName=userName, userToken=userToken, jellyfinHost=jellyfinHost)
+            qc = jellyfin.quickConnectInitialize(host=jellyfinHost, userID=userID)
+            thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], userName, userID))
+            thread.start()
             r = UserCreated()
             r.User = userName
             r.Created = True
             r.Saved = True
+            r.Code = qc["Code"]
             r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
             r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
             return r

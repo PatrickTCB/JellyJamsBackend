@@ -2,10 +2,48 @@ import datetime
 import requests
 import sys
 
+def quickConnectInitialize(host:str, userID:str) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Version=\"1.x\"".format(userID)
+    path = "/QuickConnect/Initiate"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": authorization
+    }
+    url = "{}{}".format(host, path)
+    d = requests.post(url=url, headers=headers)
+    return d.json()
+
+def quickConnectCheck(host:str, secret:str):
+    path = "/QuickConnect/Connect"
+    headers = {
+        "Accept": "application/json",
+    }
+    params = {
+        "secret": secret
+    }
+    url = "{}{}".format(host, path)
+    d = requests.get(url=url, headers=headers, params=params)
+    return d.json()
+
+def quickConnectAuthorize(host:str, secret:str, userID:str):
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Version=\"1.x\"".format(userID)
+    path = "/Users/AuthenticateWithQuickConnect"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": authorization
+    }
+    body = {
+        "secret": secret
+    }
+    url = "{}{}".format(host, path)
+    d = requests.post(url=url, headers=headers, json=body)
+    return d.json()
+
 def credentialCheck(host:str, token:str, userID:str, verbose:bool=False) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Users/Me".format(userID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization":authorization,
     }
     params = {
         "userId": userID
@@ -15,9 +53,10 @@ def credentialCheck(host:str, token:str, userID:str, verbose:bool=False) -> dict
     return d.json()
 
 def item(host:str, token:str, userID:str, itemID:str, verbose:bool=False) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Items/{}".format(itemID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
     }
     url = "{}{}".format(host, jPath)
     params = {
@@ -27,9 +66,10 @@ def item(host:str, token:str, userID:str, itemID:str, verbose:bool=False) -> dic
     return d.json()
 
 def favourites(host:str, token:str, userID:str, verbose:bool=False) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Users/{}/Items".format(userID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
     }
     url = "{}{}".format(host, jPath)
     params = {
@@ -41,6 +81,7 @@ def favourites(host:str, token:str, userID:str, verbose:bool=False) -> dict:
     return d.json()
 
 def recentPlays(host:str, token:str, userID:str, limit:int=100, verbose:bool=False) -> list:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     q = "SELECT ROWID, * FROM PlaybackActivity WHERE UserId = '{}' AND ItemType = 'Audio' ORDER BY rowid DESC LIMIT {}".format(userID, limit)
     jPath = "/user_usage_stats/submit_custom_query"
     params = {
@@ -48,7 +89,7 @@ def recentPlays(host:str, token:str, userID:str, limit:int=100, verbose:bool=Fal
         "ReplaceUserId": False
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
     }
     url = "{}{}".format(host, jPath)
     d = requests.post(url=url, headers=headers, json=params)
@@ -85,6 +126,7 @@ def recentPlays(host:str, token:str, userID:str, limit:int=100, verbose:bool=Fal
     return jellyfinItems
 
 def songLastPlay(host:str, token:str, userID:str, itemId:str, verbose:bool=False) -> str:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     action = "SKIP"
     q = "SELECT ROWID, * FROM PlaybackActivity WHERE UserId = '{}' AND ItemId = '{}' ORDER BY rowid DESC LIMIT 1".format(userID, itemId)
     jPath = "/user_usage_stats/submit_custom_query"
@@ -93,7 +135,7 @@ def songLastPlay(host:str, token:str, userID:str, itemId:str, verbose:bool=False
         "ReplaceUserId": False
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
     }
     url = "{}{}".format(host, jPath)
     d = requests.post(url=url, headers=headers, json=params)
@@ -129,6 +171,7 @@ def songLastPlay(host:str, token:str, userID:str, itemId:str, verbose:bool=False
     return action
 
 def songPlayCount(host:str, token:str, userID:str, itemId:str, includePartial:bool=False, dayLimit:int=300, verbose:bool=False) -> int:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     playCount = 0
     q = "SELECT ROWID, * FROM PlaybackActivity WHERE UserId = '{}' AND ItemId = '{}' AND DateCreated >= date('now','-{} day') ORDER BY rowid DESC".format(userID, itemId, dayLimit)
     jPath = "/user_usage_stats/submit_custom_query"
@@ -137,7 +180,7 @@ def songPlayCount(host:str, token:str, userID:str, itemId:str, includePartial:bo
         "ReplaceUserId": False
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
     }
     url = "{}{}".format(host, jPath)
     d = requests.post(url=url, headers=headers, json=params)
@@ -173,13 +216,14 @@ def songPlayCount(host:str, token:str, userID:str, itemId:str, includePartial:bo
     return playCount
 
 def library(host:str, token:str, userID:str, verbose:bool=False) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Items"
     params = {
         "userId": userID,
         "recursive": "true"
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token)
+        "Authorization": authorization
     }
     url = "{}{}".format(host, jPath)
     r = requests.get(url=url, headers=headers, params=params)
@@ -189,6 +233,7 @@ def library(host:str, token:str, userID:str, verbose:bool=False) -> dict:
 
 def getAllPlaylists(host:str, token:str, userID:str, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Items"
     params = {
         "userId": userID,
@@ -196,7 +241,7 @@ def getAllPlaylists(host:str, token:str, userID:str, verbose=False) -> dict:
         "includeItemTypes": "Playlist"
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     url = "{}{}".format(host, jPath)
@@ -207,6 +252,7 @@ def getAllPlaylists(host:str, token:str, userID:str, verbose=False) -> dict:
 
 def getPlaylistBySearch(host:str, token:str, userID:str, playlistName:str, limit:int=100, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Items"
     params = {
         "userId": userID,
@@ -217,7 +263,7 @@ def getPlaylistBySearch(host:str, token:str, userID:str, playlistName:str, limit
         "fields": "ProviderIds,Path,MediaSources,MediaStreams"
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     url = "{}{}".format(host, jPath)
@@ -234,6 +280,7 @@ def getPlaylistBySearch(host:str, token:str, userID:str, playlistName:str, limit
 
 def getItemBySearch(host:str, token:str, userID:str, searchTerm:str="", extraParams:dict={}, limit:int=100, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Items"
     params = {
         "userId": userID,
@@ -245,7 +292,7 @@ def getItemBySearch(host:str, token:str, userID:str, searchTerm:str="", extraPar
     for k in extraParams.keys():
         params[k] = extraParams[k]
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     url = "{}{}".format(host, jPath)
@@ -256,6 +303,7 @@ def getItemBySearch(host:str, token:str, userID:str, searchTerm:str="", extraPar
 
 def getSimilarArtists(host:str, token:str, userID:str, artistId:str="", limit:int=10, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Artists/{}/Similar".format(artistId)
     params = {
         "userId": userID,
@@ -263,7 +311,7 @@ def getSimilarArtists(host:str, token:str, userID:str, artistId:str="", limit:in
         "recursive": "true"
     }
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     url = "{}{}".format(host, jPath)
@@ -273,6 +321,7 @@ def getSimilarArtists(host:str, token:str, userID:str, artistId:str="", limit:in
     return r.json()
 
 def createPlaylist(host:str, token:str, userID:str, name:str, items:list=[]):
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     body = {
         "Name": name,
         "Ids": items,
@@ -288,7 +337,7 @@ def createPlaylist(host:str, token:str, userID:str, name:str, items:list=[]):
     }
     jPath = "/Playlists"
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     url = "{}{}".format(host, jPath)
@@ -299,9 +348,10 @@ def createPlaylist(host:str, token:str, userID:str, name:str, items:list=[]):
 
 def getPlaylist(host: str, token:str, userID:str, playlistID:str):
     # https://api.jellyfin.org/#tag/Playlists/operation/GetPlaylist
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Playlists/{}".format(playlistID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     params = {
@@ -315,9 +365,10 @@ def getPlaylist(host: str, token:str, userID:str, playlistID:str):
 
 def addToPlaylist(host: str, token:str, name:str, itemIDs:str, userID:str, playlistID: str):
     # https://api.jellyfin.org/#tag/Playlists/operation/RemoveItemFromPlaylist
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Playlists/{}".format(playlistID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     body = {
@@ -341,9 +392,10 @@ def addToPlaylist(host: str, token:str, name:str, itemIDs:str, userID:str, playl
 
 def removeFromPlaylist(host: str, token:str, entryIDs: str, userID:str, playlistID: str):
     # https://api.jellyfin.org/#tag/Playlists/operation/RemoveItemFromPlaylist
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Playlists/{}/Items".format(playlistID)
     headers = {
-        "Authorization": "MediaBrowser Client=\"Script\", Device=\"backend\", Token=\"{}\"".format(token),
+        "Authorization": authorization,
         "Accept": "application/json"
     }
     params = {
