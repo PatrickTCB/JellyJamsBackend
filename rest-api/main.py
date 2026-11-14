@@ -1,6 +1,7 @@
 import os
 import random
 import threading
+import time
 
 from fastapi import FastAPI, Form, Request, Response, HTTPException
 
@@ -18,6 +19,7 @@ class UserCreated(BaseModel):
     User:str = ""
     Created:bool = False
     Saved:bool = False
+    InProgress:bool = False
     Code:str = ""
     PlaylistSuffix:str = "_automatic"
     ServerPlaylist:str = ""
@@ -73,6 +75,25 @@ def serverPlaylistRemoval(userID:str):
     d = (userID,)
     db.delete(query=q, datatuple=d, tableName="ServerPlaylist")
 
+def qcStart(userID:str, userName:str, code:str, host:str) -> None:
+    q = "INSERT INTO UserVerification VALUES(?,?,?,?)"
+    d = (userID, userName, code, host,)
+    db.insert(query=q, datatuple=d, tableName="UserVerification")
+
+def qcDone(userID:str) -> None:
+    q = "DELETE FROM UserVerification where id = ?"
+    d = (userID,)
+    db.delete(query=q, datatuple=d, tableName="UserVerification")
+
+def qcCheck(userID:str) -> dict | None:
+    q = "SELECT * FROM UserVerification WHERE id = ?"
+    d = (userID,)
+    rows = db.select(query=q, datatuple=d, tableName="UserVerification")
+    for row in rows:
+        if row["id"] == userID:
+            return row
+    return None
+
 def saveUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
     q = "DELETE FROM Users WHERE id = ?"
     d = (userID,)
@@ -81,17 +102,33 @@ def saveUserInfo(userID:str, userName:str, userToken:str, jellyfinHost:str):
     d = (userID,userName,userToken,jellyfinHost)
     db.insert(query=q, datatuple=d, tableName="Users")
 
-def quickConnect(host:str, secret:str, userName:str, userID:str):
+def quickConnect(host:str, secret:str, code:str, userName:str, userID:str):
     print("Starting quick connect process for {}".format(userName))
+    qcStart(userID=userID, userName=userName, code=code, host=host)
     retry = True
     check = jellyfin.quickConnectCheck(host=host, secret=secret)
+    checkStart = int(time.time())
     while retry:
         if check["Authenticated"]:
             print("Authentication worked.")
             retry = False
+        if check["Expired"]:
+            print("Code {} expired before {} did the dance in Quick Connect.".format(code, userName))
+            retry = False
+            qcDone(userID=userID)
+            pass
+        time.sleep(2)
+        checkTime = int(time.time())
+        if (checkTime - checkStart) > 600:
+            print("Code {} expired before {} did the dance in Quick Connect.".format(code, userName))
+            retry = False
+            qcDone(userID=userID)
+            pass
+            
     auth = jellyfin.quickConnectAuthorize(host=host, secret=secret, userID=userID)
     print("Saving authentication info for {}".format(auth["User"]["Name"]))
     saveUserInfo(userID=auth["User"]["Id"], userName=auth["User"]["Name"], userToken=auth["AccessToken"], jellyfinHost=host)
+    qcDone(userID=userID)
     pass
 
 def deleteUser(userID:str, userName:str, userToken:str, jellyfinHost:str):
@@ -486,44 +523,73 @@ async def extend_queue_by_album(request:Request, userID:str, currentAlbumID:str)
     return r
 
 @app.post("/register", status_code=201, response_model=UserCreated, responses={200: {"description": "User already registered", "model": UserCreated}, 401: {"description": "User invalid", "model": ErrorResponse}})
-async def new_user(requset:Request,response: Response, userName:Annotated[str, Form()], userID:Annotated[str, Form()], userToken:Annotated[str, Form()], jellyfinHost:Annotated[str, Form()]) -> UserCreated:
+async def new_user(requset:Request,response: Response, userName:Annotated[str, Form()], userID:Annotated[str, Form()], jellyfinHost:Annotated[str, Form()]) -> UserCreated:
     print("Checking to see if {} has been registered yet.".format(userID))
     userInfo = common.getUserInfo(userID=userID)
     if userInfo is not None:
         print("User {} already exists.".format(userID))
         qc = jellyfin.quickConnectInitialize(host=jellyfinHost, userID=userID)
-        thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], userName, userID))
+        thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], qc["Code"], userName, userID))
         thread.start()
         r = UserCreated()
         r.User = userName
         r.Created = False
-        r.Saved = True
+        r.Saved = False
+        r.InProgress = True
         r.Code = qc["Code"]
         r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
         r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
         response.status_code = 200
         return r
     # User does not exist
-    print("Creating user {}.".format(userID))
-    user = jellyfin.credentialCheck(host=jellyfinHost, token=userToken, userID=userID)
-    if "Id" in user.keys():
-        if user["Id"] == userID:
-            print("Credentials for {} seem valid and will be saved.".format(userName))
-            qc = jellyfin.quickConnectInitialize(host=jellyfinHost, userID=userID)
-            thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], userName, userID))
-            thread.start()
+    try:
+        print("Creating user {}.".format(userID))
+        qc = jellyfin.quickConnectInitialize(host=jellyfinHost, userID=userID)
+        thread = threading.Thread(target=quickConnect, args=(jellyfinHost, qc["Secret"], qc["Code"], userName, userID))
+        thread.start()
+        r = UserCreated()
+        r.User = userName
+        r.Created = False
+        r.Saved = False
+        r.InProgress = True
+        r.Code = qc["Code"]
+        r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
+        r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
+        return r
+    except:
+        raise HTTPException(status_code=400, detail="User credentials submitted for {} could not be saved".format(userName))
+
+@app.get("/verify", status_code=200, response_model=UserCreated, responses={401: {"description": "User invalid", "model": ErrorResponse}})
+async def verify_user(requset:Request,response: Response, userID:str) -> UserCreated:
+    userInfo = common.getUserInfo(userID=userID)
+    if userInfo == None:
+        qc = qcCheck(userID=userID)
+        if qc == None:      
+            raise HTTPException(status_code=400, detail="User verification does not seem to be in process for userID {} ".format(userID))
+        else:
             r = UserCreated()
-            r.User = userName
-            r.Created = True
-            r.Saved = True
-            r.Code = qc["Code"]
+            r.User = qc["name"]
+            r.Created = False
+            r.Saved = False
+            r.InProgress = True
+            r.Code = qc["code"]
             r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
             r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
             return r
-    raise HTTPException(status_code=401, detail="User credentials submitted for {} could not be validated".format(userName))
+    else:
+        r = UserCreated()
+        r.User = userInfo.name
+        r.Created = True
+        r.Saved = True
+        r.InProgress = False
+        r.Code = ""
+        r.PlaylistSuffix = os.environ["PLAYLIST_SUFFIX"]
+        r.ServerPlaylist = os.environ["SERVER_PLAYLIST"]
+        return r
+        
 
 @app.delete("/delete-me", status_code=200, response_model=UserCreated, responses={200: {"description": "User not registered", "model": UserCreated}, 401: {"description": "User invalid", "model": ErrorResponse}})
-async def delete_user(requset:Request,response: Response, userName:str, userID:str, userToken:str, jellyfinHost:str) -> UserCreated:
+async def delete_user(requset:Request,response: Response, userName:str, userID:str, jellyfinHost:str) -> UserCreated:
     print("Checking to see if {} has been registered yet.".format(userID))
     userInfo = common.getUserInfo(userID=userID)
     if userInfo is None:
@@ -538,11 +604,11 @@ async def delete_user(requset:Request,response: Response, userName:str, userID:s
         return r
     # User does not exist
     print("Deleting user {}.".format(userID))
-    user = jellyfin.credentialCheck(host=jellyfinHost, token=userToken, userID=userID)
+    user = jellyfin.credentialCheck(host=jellyfinHost, token=userInfo.token, userID=userID)
     if "Id" in user.keys():
         if user["Id"] == userID:
             print("Credentials for {} seem valid and will be deleted.".format(userName))
-            deleteUser(userID=userID, userName=userName, userToken=userToken, jellyfinHost=jellyfinHost)
+            deleteUser(userID=userID, userName=userName, userToken=userInfo.token, jellyfinHost=jellyfinHost)
             r = UserCreated()
             r.User = userName
             r.Created = False
