@@ -44,7 +44,7 @@ for user in users:
         for tape in mixtapes["Items"]:
             print("Checking out {} for {}".format(tape["Name"], user.name))
             if tape["Name"] == "{}_automatic".format(os.environ["SERVER_PLAYLIST"]):
-                print("Won't remove user ignores from the family blend")
+                print("Won't remove user ignores from the server playlist")
             else:
                 tapeExtraParams = {
                     "parentId": tape["Id"],
