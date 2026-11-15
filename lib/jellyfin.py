@@ -359,6 +359,34 @@ def createPlaylist(host:str, token:str, userID:str, name:str, items:list=[]):
         print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
     return r.json()
 
+def renamePlaylist(host:str, token:str, userID:str, name:str, playlistID:str, items:list=[]) -> bool:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
+    body = {
+        "Name": name,
+        "UserId": userID,
+        "MediaType": "Audio",
+        "Users": [
+            {
+            "UserId": userID,
+            "CanEdit": True
+            }
+        ],
+        "IsPublic": False
+    }
+    if len(items) > 0:
+        body["Ids"] = items
+    jPath = "/Playlists/{}".format(playlistID)
+    headers = {
+        "Authorization": authorization,
+        "Accept": "application/json"
+    }
+    url = "{}{}".format(host, jPath)
+    r = requests.post(url=url, headers=headers, json=body)
+    if r.status_code != 204:
+        print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
+        return False
+    return True
+
 def getPlaylist(host: str, token:str, userID:str, playlistID:str):
     # https://api.jellyfin.org/#tag/Playlists/operation/GetPlaylist
     authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
