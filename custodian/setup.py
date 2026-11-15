@@ -36,4 +36,7 @@ db.table(tableName="PlaylistBuilds", tableColumns=playlistBuildsColumns)
 # Create 'MixtapeHash' table
 mixtapeHashColumns = ["timestamp", "userID", "hash"]
 db.table(tableName="MixtapeHash", tableColumns=mixtapeHashColumns)
+# Create 'CustomJobHash' table
+mixtapeHashColumns = ["timestamp", "userID", "jobName", "hash"]
+db.table(tableName="CustomJobHash", tableColumns=mixtapeHashColumns)
 # Setup is done, now for the task loop.
