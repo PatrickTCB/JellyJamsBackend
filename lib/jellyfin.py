@@ -254,7 +254,14 @@ def getAllPlaylists(host:str, token:str, userID:str, verbose=False) -> dict:
     r = requests.get(url=url, headers=headers, params=params)
     if r.status_code != 200:
         print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
-    return r.json()
+    resp = r.json()
+    audioPlaylists = []
+    for playlist in resp["Items"]:
+        if playlist["MediaType"] == "Audio":
+            audioPlaylists.append(playlist)
+    resp["Items"] = audioPlaylists
+    resp["TotalRecordCount"] = len(audioPlaylists)
+    return resp
 
 def getPlaylistBySearch(host:str, token:str, userID:str, playlistName:str, limit:int=100, verbose=False) -> dict:
     # https://api.jellyfin.org/#tag/Items/operation/GetItems
