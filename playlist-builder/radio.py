@@ -109,6 +109,7 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
             allowed = False
         if allowed:
             playlistSongs.append(song["item_id"])
+    print("Turned {} recent tracks into {} songs for {}.".format(len(allRecents), len(playlistSongs), user.name))
     return playlistSongs
 
 def getOldMixtapeHash(userID):
