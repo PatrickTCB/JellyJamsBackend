@@ -25,7 +25,7 @@ alchemySongAmount = int(0.2 * ServerPlaylistSongCount)
 normalSongAmount = ServerPlaylistSongCount - alchemySongAmount
 songsPerUser = int(normalSongAmount / 2)
 
-serverPlaylistName = "{}_automatic".format(os.environ["SERVER_PLAYLIST"])
+serverPlaylistName = "{}{}".format(os.environ["SERVER_PLAYLIST"], os.environ["PLAYLIST_SUFFIX"])
 maxAge = 84600
 currentTimeStamp = int(datetime.now().timestamp())
 
