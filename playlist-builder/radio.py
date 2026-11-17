@@ -63,13 +63,13 @@ def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourc
             jfItem = jellyfin.item(host=user.host, token=user.token, userID=user.id, itemID=amSong["item_id"])
             allowed = True
             songIds = []
-            songIds.append(amSong["Id"])
-            songIds.append(amSong["AlbumId"])
-            for genre in amSong.get("GenreItems", []):
+            songIds.append(jfItem["Id"])
+            songIds.append(jfItem["AlbumId"])
+            for genre in jfItem.get("GenreItems", []):
                 songIds.append(genre["Id"])
-            for artist in amSong["ArtistItems"]:
+            for artist in jfItem["ArtistItems"]:
                 songIds.append(artist["Id"])
-            for albumArtist in amSong["AlbumArtists"]:
+            for albumArtist in jfItem["AlbumArtists"]:
                 songIds.append(albumArtist["Id"])
             if any(item in songIds for item in userBans):
                 print("{} isn't allowed in lists for {}.".format(song["Name"], user.name))
