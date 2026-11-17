@@ -187,7 +187,7 @@ for user in users:
                 for song in recents:
                     for artist in song["ArtistItems"]:
                         if artist["Id"] not in usedSourceBands:
-                            candidateArtists.append(artist)
+                            candidateArtists.append(artist["Name"])
                             if artist["Name"] not in artistNameToID.keys():
                                 artistNameToID[artist["Name"]] = artist["Id"]
                 artist = Counter(candidateArtists).most_common(1)[0][0]
