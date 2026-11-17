@@ -122,7 +122,7 @@ def getOldMixtapeHash(userID):
 
 def saveMixtapeHash(userID, hash):
     now = int(datetime.now().timestamp())
-    q = "INSERT INTO MixtapHash VALUES(?,?,?)"
+    q = "INSERT INTO MixtapeHash VALUES(?,?,?)"
     d = (now,userID,hash)
     db.insert(query=q, datatuple=d, tableName="MixtapeHash")
 
