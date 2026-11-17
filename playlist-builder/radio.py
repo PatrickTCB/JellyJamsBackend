@@ -153,6 +153,7 @@ for user in users:
     mixtapeAge = int(now - oldMixtapeHash["timestamp"])
     if mixtapeAge > tapeExpiry:
         print("Time to make new mixtapes for {}.".format(user.name))
+        resetMixTapes(user=user, playlistSuffix=playlistSuffix)
         userBans = common.getUserBans(userID=user.id)
         recents = jellyfin.recentPlays(host=user.host, token=user.token, userID=user.id)
         # I don't want all the tapes to be based on the same artists so I track which
@@ -178,7 +179,10 @@ for user in users:
                     usedSourceBands.append(artist["Id"])
                 for albumArtist in endSong["AlbumArtists"]:
                     usedSourceBands.append(artist["Id"])
-                playlistName = "{} to {}{}".format(startSong["AlbumArtist"], endSong["AlbumArtist"], playlistSuffix)
+                if "AlbumArtist" in startSong.keys():
+                    playlistName = "{} to {}{}".format(startSong["AlbumArtist"], endSong["AlbumArtist"], playlistSuffix)
+                else:
+                    playlistName = "{} to {}{}".format(startSong["Name"], endSong["Name"], playlistSuffix)
             if tapeMethod == 2:
                 # Method 2 - Make a tape based on some artist the user has
                 # been listening to
