@@ -11,9 +11,6 @@ python3 -u setup.py
 while true; do
     echo "====="
     echo `date`
-    python3 -u main.py
-    echo "Standard custodian jobs done"
-    echo "====="
     for job in custom-jobs/*.py; do
         echo "====="
         echo "Starting $job"
