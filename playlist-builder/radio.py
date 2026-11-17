@@ -228,6 +228,7 @@ for user in users:
                 tapeSongIds = []
                 for song in tapeSongs:
                     tapeSongIds.append(song["Id"])
+                print("Setting up {} for {} with {} songs".format(playlistName, user.name, len(tapeSongIds)))
                 jellyfin.playlistSetup(host=user.host, token=user.token, userID=user.id, name=playlistName, songs=tapeSongIds, verbose=False)
             else:
                 print("Somehow tape {} for {} ended with 0 songs, despite my best efforts.".format(tapesMade, user.name))
