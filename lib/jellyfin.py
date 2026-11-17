@@ -86,7 +86,7 @@ def favourites(host:str, token:str, userID:str, verbose:bool=False) -> dict:
     d = requests.get(url=url, headers=headers, params=params)
     return d.json()
 
-def recentPlays(host:str, token:str, userID:str, limit:int=100, verbose:bool=False) -> list:
+def recentPlays(host:str, token:str, userID:str, limit:int=100, includePartial:bool=False, verbose:bool=False) -> list:
     authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     q = "SELECT ROWID, * FROM PlaybackActivity WHERE UserId = '{}' AND ItemType = 'Audio' ORDER BY rowid DESC LIMIT {}".format(userID, limit)
     jPath = "/user_usage_stats/submit_custom_query"
@@ -123,6 +123,10 @@ def recentPlays(host:str, token:str, userID:str, limit:int=100, verbose:bool=Fal
         songLength = int(i["RunTimeTicks"] / 10000000)
         playbackProgress = int((int(r["PlayDuration"]) / songLength) * 100)
         if playbackProgress >= 80:
+            i["PlayBackEvent"] = "play"
+        else:
+            i["PlayBackEvent"] = "skip"
+        if playbackProgress >= 80 or includePartial:
             jellyfinItems.append(i)
         else:
             if verbose:
@@ -403,6 +407,24 @@ def getPlaylist(host: str, token:str, userID:str, playlistID:str):
     if r.status_code != 200:
         print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
     return r.json()
+
+def deletePlaylist(host: str, token:str, userID:str, playlistID:str) -> bool:
+    # https://api.jellyfin.org/#tag/Library/operation/DeleteItem
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
+    jPath = "/Items/{}".format(playlistID)
+    headers = {
+        "Authorization": authorization,
+        "Accept": "application/json"
+    }
+    params = {
+        "userId": userID
+    }
+    url = "{}{}".format(host, jPath)
+    r = requests.delete(url=url, headers=headers, params=params)
+    if r.status_code != 204:
+        print("ERROR: Jellyfin response {}\n{}".format(r.status_code, r.text))
+        return False
+    return True
 
 def addToPlaylist(host: str, token:str, name:str, itemIDs:str, userID:str, playlistID: str):
     # https://api.jellyfin.org/#tag/Playlists/operation/RemoveItemFromPlaylist
