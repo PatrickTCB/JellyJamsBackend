@@ -117,7 +117,7 @@ def getOldMixtapeHash(userID):
     r = db.select(query=q, datatuple=d, tableName="MixtapeHash", verbose=True)
     if len(r) > 0:
         return r[0]
-    return {}
+    return {"timestamp": 0}
 
 def saveMixtapHash(userID, hash):
     now = int(datetime.now().timestamp())
