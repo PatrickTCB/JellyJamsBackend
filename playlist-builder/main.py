@@ -228,8 +228,9 @@ for playlist in playlists:
                     plays = jellyfin.songPlayCount(host=userInfo.host, token=userInfo.token, userID=userInfo.id, itemId=jellyfinItem["Id"], dayLimit=playbackHistoryLimitDays, includePartial=alchemyPlaybackUnderEighty)
                     if (plays > 0) and (playlist["freshAlchemy"] == "true"):
                         allowed = False
-                    if albumsUsed.count(jellyfinItem["Album"]) >= userLimits["sameAlbumLimit"]:
-                        allowed = False
+                    if "Album" in jellyfinItem.keys():
+                        if albumsUsed.count(jellyfinItem["Album"]) >= userLimits["sameAlbumLimit"]:
+                            allowed = False
                     for artist in jellyfinItem["Artists"]:
                         if artistsUsed.count(artist) >= userLimits["sameArtistLimit"]:
                             allowed = False
