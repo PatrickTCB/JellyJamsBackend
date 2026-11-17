@@ -108,7 +108,7 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
             print("{} isn't allowed in lists for {}.".format(jellyfinItem["Name"], user.name))
             allowed = False
         if allowed:
-            playlistSongs.append(song["item_id"])
+            playlistSongs.append(jellyfinItem)
     print("Turned {} recent tracks into {} songs for {}.".format(len(allRecents), len(playlistSongs), user.name))
     return playlistSongs
 
