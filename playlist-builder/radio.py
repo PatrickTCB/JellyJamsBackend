@@ -114,7 +114,7 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
 def getOldMixtapeHash(userID):
     q = "SELECT * FROM MixtapeHash WHERE userID = ? ORDER BY timestamp DESC LIMIT 1"
     d = (userID,)
-    r = db.select(query=q, datatuple=d, tableName="MixtapeHash")
+    r = db.select(query=q, datatuple=d, tableName="MixtapeHash", verbose=True)
     if len(r) > 0:
         return r[0]
     return {}
