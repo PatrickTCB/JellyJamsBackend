@@ -13,6 +13,9 @@ while true; do
     python3 -u main.py
     echo "User Playlists built"
     echo "====="
+    python3 -u radio.py
+    echo "Mixtapes built"
+    echo "====="
     python3 -u server-playlist.py
     echo "$SERVER_PLAYLIST built"
     echo -ne "Sleeping for 2m"\\r
