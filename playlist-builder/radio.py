@@ -226,8 +226,8 @@ for user in users:
                     tapeSongIds.append(song["Id"])
                 jellyfin.playlistSetup(host=user.host, token=user.token, userID=user.id, name=playlistName, songs=tapeSongIds, verbose=False)
             else:
-                print("Somehow tape {} for {} ended with 0 songs, despite my best efforts.".format(tapeCount, user.name))
-            print("Done tape {} for {}.".format(tapeCount, user.name))
+                print("Somehow tape {} for {} ended with 0 songs, despite my best efforts.".format(tapesMade, user.name))
+            print("Done tape {} for {}.".format(tapesMade, user.name))
             tapesMade = tapesMade + 1
         # Logic end
         try:
