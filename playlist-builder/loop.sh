@@ -10,11 +10,11 @@ echo "Container started `date`"
 while true; do
     echo "====="
     echo `date`
-    python3 -u main.py
-    echo "User Playlists built"
-    echo "====="
     python3 -u radio.py
     echo "Mixtapes built"
+    echo "====="
+    python3 -u main.py
+    echo "User Playlists built"
     echo "====="
     python3 -u server-playlist.py
     echo "$SERVER_PLAYLIST built"
