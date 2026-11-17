@@ -184,7 +184,7 @@ for user in users:
                 candidateArtists = []
                 artistNameToID = {}
                 for song in recents:
-                    for artist in song["ArtistsItems"]:
+                    for artist in song["ArtistItems"]:
                         if artist["Id"] not in usedSourceBands:
                             candidateArtists.append(artist)
                             if artist["Name"] not in artistNameToID.keys():
