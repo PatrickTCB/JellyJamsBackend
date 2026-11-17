@@ -120,7 +120,7 @@ def getOldMixtapeHash(userID):
         return r[0]
     return {"timestamp": 0}
 
-def saveMixtapHash(userID, hash):
+def saveMixtapeHash(userID, hash):
     now = int(datetime.now().timestamp())
     q = "INSERT INTO MixtapHash VALUES(?,?,?)"
     d = (now,userID,hash)
@@ -179,7 +179,7 @@ for user in users:
                     usedSourceBands.append(artist["Id"])
                 for albumArtist in endSong["AlbumArtists"]:
                     usedSourceBands.append(artist["Id"])
-                if "AlbumArtist" in startSong.keys():
+                if "AlbumArtist" in startSong.keys() and "AlbumArtist" in endSong.keys():
                     playlistName = "{} to {}{}".format(startSong["AlbumArtist"], endSong["AlbumArtist"], playlistSuffix)
                 else:
                     playlistName = "{} to {}{}".format(startSong["Name"], endSong["Name"], playlistSuffix)
@@ -242,7 +242,7 @@ for user in users:
             print(e)
             newUserPlaylists = {"Items": []}
         newPlaylistHash = hashlib.md5(json.dumps(newUserPlaylists).encode("utf-8")).hexdigest()
-        saveMixtapHash(userID=user.id, hash=newPlaylistHash)
+        saveMixtapeHash(userID=user.id, hash=newPlaylistHash)
         print("Saved hash for playlists now that mixtapes for {} are built".format(user.name))
     else:
         print("Mixtapes for {} are only {}s old and they expire at {}s.".format(user.name, mixtapeAge, tapeExpiry))
