@@ -127,6 +127,34 @@ def instantPlaylist(query:str, limit:int) -> list:
     jr = json.loads(resp)
     return jr["response"]["query_results"]
 
+def artistSearch(query:str, limit:int=20) -> dict:
+    host=os.environ['AUDIOMUSE_HOST']
+    path = "/api/search_artists"
+    headers = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    params = {
+        "query": query,
+        "limit": limit
+    }
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
+    url = "{}{}".format(host, path)
+    r = requests.get(url=url, headers=headers, cookies=cookies, params=params)
+    if r.status_code != 200:
+        print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
+        return {}
+    else:
+        rj = r.json()
+        for artist in rj:
+            if artist["artist"] == "query":
+                return artist
+        return {}
+
 def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
     host=os.environ['AUDIOMUSE_HOST']
     path = "/api/similar_artists"
@@ -159,3 +187,46 @@ def similarArtists(artistName:str, numberOfArtists:int=3) -> list:
         return []
     else:
         return rj
+
+def songPath(startSongID:str, endSongID:str, limit:int=25) -> dict:
+    host=os.environ['AUDIOMUSE_HOST']
+    path = "/api/find_path"
+    headers = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
+    params = {
+        "max_steps": limit,
+        "path_fix_size": "false",
+        "start_song_id": startSongID,
+        "end_song_id": endSongID,
+        "mood_pct": 100
+    }
+    url = "{}{}".format(host, path)
+    r = requests.get(url=url, headers=headers, cookies=cookies, params=params)
+    if r.status_code != 200:
+        print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
+    return r.json()    
+
+def cron():
+    host=os.environ['AUDIOMUSE_HOST']
+    path = "/api/cron"
+    headers = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    if os.environ.get("AUDIOMUSE_API_KEY", "") != "":
+        headers["Authorization"] = "Bearer {}".format(os.environ["AUDIOMUSE_API_KEY"])
+        cookies = RequestsCookieJar()
+    else:
+        cookies = auth(user=os.environ['AUDIOMUSE_USER'], pw=os.environ['AUDIOMUSE_PW'], host=host)
+    url = "{}{}".format(host, path)
+    r = requests.get(url=url, headers=headers, cookies=cookies)
+    if r.status_code != 200:
+        print("ERROR: audiomuse response {}\n{}".format(r.status_code, r.text))
+    return r.json()
