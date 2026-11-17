@@ -9,6 +9,7 @@ services:
       - DB_PW=${DB_PW}
       - PLAYLIST_SUFFIX=${PLAYLIST_SUFFIX}
       - SERVER_PLAYLIST=${SERVER_PLAYLIST}
+      - JELLY_JAMS_RADIO=${JELLY_JAMS_RADIO}
       - AUDIOMUSE_USER=${AUDIOMUSE_USER}
       - AUDIOMUSE_PW=${AUDIOMUSE_PW}
       - AUDIOMUSE_API_KEY=${AUDIOMUSE_API_KEY}
@@ -42,7 +43,9 @@ services:
     restart: unless-stopped
     environment:
       - DB_PW=${DB_PW}
+      - PLAYLIST_SUFFIX=${PLAYLIST_SUFFIX}
       - SERVER_PLAYLIST=${SERVER_PLAYLIST}
+      - JELLY_JAMS_RADIO=${JELLY_JAMS_RADIO}
     volumes:
       - ${SHARED_DATA}:/data
   
