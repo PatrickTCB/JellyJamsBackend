@@ -172,20 +172,3 @@ def select(query, datatuple, tableName, verbose=False) -> list:
     con.commit()
     con.close()
     return results
-
-if __name__ == "__main__":
-    import sys
-    query = "{}".format(sys.argv[1])
-    dbname="/data/jellyjams-server.db"
-    con = sqlcipher3.connect(dbname)
-    con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
-    con.execute("PRAGMA journal_mode=WAL")
-    cur = con.cursor()
-    r = cur.execute(query)
-    resultsList = r.fetchall()
-    print(query)
-    for result in resultsList:
-        print(result)
-    con.commit()
-    con.close()
-    print("Done")
