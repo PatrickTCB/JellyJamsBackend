@@ -161,7 +161,7 @@ for user in users:
         tapesMade = 0
         while tapesMade < tapeCount:
             tapeMethod = random.randint(1, 3)
-            print("Starting tape {} for {} using method {}.".format(tapeCount, user.name, tapeMethod))
+            print("Starting tape {} for {} using method {}.".format(tapesMade, user.name, tapeMethod))
             tapeSongs = []
             playlistName = "Mixtape {}{}".format(tapeCount, playlistSuffix)
             if tapeMethod == 1:
@@ -191,7 +191,7 @@ for user in users:
                             if artist["Name"] not in artistNameToID.keys():
                                 artistNameToID[artist["Name"]] = artist["Id"]
                 artist = Counter(candidateArtists).most_common(1)[0][0]
-                artistId = artistNameToID["artist"]
+                artistId = artistNameToID[artist]
                 usedSourceBands.append(artistId)
                 searchTerm = "{} and Friends".format(artist)
                 playlistName = "{} and Friends{}".format(artist, playlistSuffix)
