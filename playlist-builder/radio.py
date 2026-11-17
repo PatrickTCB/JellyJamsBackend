@@ -146,17 +146,18 @@ tapeSongLimit = 25
 tapeExpiry = 86400 # 24hrs
 playlistSuffix = os.environ["PLAYLIST_SUFFIX"]
 for user in users:
+    print("Starting mixtape job for {}.".format(user.name))
     oldMixtapeHash = getOldMixtapeHash(userID=user.id)
     now = int(datetime.now().timestamp())
     mixtapeAge = int(now - oldMixtapeHash["timestamp"])
     if mixtapeAge > tapeExpiry:
+        print("Time to make new mixtapes for {}.".format(user.name))
         userBans = common.getUserBans(userID=user.id)
         recents = jellyfin.recentPlays(host=user.host, token=user.token, userID=user.id)
         # I don't want all the tapes to be based on the same artists so I track which
         # ones were used, and don't use them more than once.
         usedSourceBands = []
         tapesMade = 0
-        tapeCount = 0
         while tapesMade < tapeCount:
             tapeMethod = random.randint(1, 3)
             print("Starting tape {} for {} using method {}.".format(tapeCount, user.name, tapeMethod))
@@ -226,7 +227,7 @@ for user in users:
             else:
                 print("Somehow tape {} for {} ended with 0 songs, despite my best efforts.".format(tapeCount, user.name))
             print("Done tape {} for {}.".format(tapeCount, user.name))
-            tapeCount = tapeCount + 1
+            tapesMade = tapesMade + 1
         # Logic end
         try:
             newUserPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
