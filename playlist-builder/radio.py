@@ -9,11 +9,12 @@ from datetime import datetime
 
 from lib import audiomuse, db, common, jellyfin
 
-def resetMixTapes(user:common.UserInfo, playlistSuffix:str) -> None:
+def resetMixTapes(user:common.UserInfo, playlistSuffix:str, serverPlaylist:str) -> None:
     userPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
     for playlist in userPlaylists["Items"]:
-        if playlistSuffix in playlist["Name"]:
-            jellyfin.deletePlaylist(host=user.host, token=user.token, userID=user.token, playlistID=playlist["Id"])
+        if playlist["Name"] != serverPlaylist:
+            if playlistSuffix in playlist["Name"]:
+                jellyfin.deletePlaylist(host=user.host, token=user.token, userID=user.token, playlistID=playlist["Id"])
 
 def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourceBands:list, limit:int) -> list:
     playlistSongs = []
@@ -184,7 +185,7 @@ for user in users:
         rebuildTapes = True
     if rebuildTapes:
         print("Time to make new mixtapes for {}.".format(user.name))
-        resetMixTapes(user=user, playlistSuffix=playlistSuffix)
+        resetMixTapes(user=user, playlistSuffix=playlistSuffix, serverPlaylist=serverPlaylistName)
         userBans = common.getUserBans(userID=user.id)
         recents = jellyfin.recentPlays(host=user.host, token=user.token, userID=user.id)
         # I don't want all the tapes to be based on the same artists so I track which
