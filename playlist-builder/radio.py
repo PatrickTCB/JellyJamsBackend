@@ -112,7 +112,29 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
     print("Turned {} recent tracks into {} songs for {}.".format(len(allRecents), len(playlistSongs), user.name))
     return playlistSongs
 
-def getOldMixtapeHash(userID):
+def getLiveMixtapeHash(user:common.UserInfo, serverPlaylist:str, playlistSuffix:str) -> str:
+    customMixtapes = common.getUserPlaylists(userID=user.id)
+    customTapeNames = []
+    customTapeNames.append(serverPlaylistName)
+    for tape in customMixtapes:
+        customTapeNames.append("{}{}".format(tape["name"], playlistSuffix))
+    try:
+        newUserPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
+        filteredPlaylists = []
+        for playlist in newUserPlaylists["Items"]:
+            if playlist["name"] not in customTapeNames:
+                if playlistSuffix in playlist["name"]:
+                    filteredPlaylists.append(playlist)
+        newUserPlaylists["Items"] = filteredPlaylists
+        newUserPlaylists["TotalRecordCount"] = len(filteredPlaylists)
+    except Exception as e:
+        print("Couldn't get playlists for {}.\nProbably an error worth fixing before setting up your own custom job.".format(user.name))
+        print(e)
+        newUserPlaylists = {"Items": []}
+    newPlaylistHash = hashlib.md5(json.dumps(newUserPlaylists).encode("utf-8")).hexdigest()
+    return newPlaylistHash
+
+def getDBMixtapeHash(userID):
     q = "SELECT * FROM MixtapeHash WHERE userID = ? ORDER BY timestamp DESC LIMIT 1"
     d = (userID,)
     r = db.select(query=q, datatuple=d, tableName="MixtapeHash")
@@ -146,12 +168,21 @@ tapeCount = 10
 tapeSongLimit = 25
 tapeExpiry = 86400 # 24hrs
 playlistSuffix = os.environ["PLAYLIST_SUFFIX"]
+serverPlaylistName = "{}{}".format(os.environ["SERVER_PLAYLIST"], os.environ["PLAYLIST_SUFFIX"])
 for user in users:
     print("Starting mixtape job for {}.".format(user.name))
-    oldMixtapeHash = getOldMixtapeHash(userID=user.id)
+    oldMixtapeHash = getDBMixtapeHash(userID=user.id)
+    currentMixtapeHash = getLiveMixtapeHash(user=user, serverPlaylist=serverPlaylistName, playlistSuffix=playlistSuffix)
     now = int(datetime.now().timestamp())
     mixtapeAge = int(now - oldMixtapeHash["timestamp"])
+    rebuildTapes = False
     if mixtapeAge > tapeExpiry:
+        print("The mixtapes have expired.")
+        rebuildTapes = True
+    if oldMixtapeHash != currentMixtapeHash:
+        print("The mixtapes didn't match the expected hash")
+        rebuildTapes = True
+    if rebuildTapes:
         print("Time to make new mixtapes for {}.".format(user.name))
         resetMixTapes(user=user, playlistSuffix=playlistSuffix)
         userBans = common.getUserBans(userID=user.id)
@@ -235,13 +266,7 @@ for user in users:
             print("Done tape {} for {}.".format(tapesMade, user.name))
             tapesMade = tapesMade + 1
         # Logic end
-        try:
-            newUserPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
-        except Exception as e:
-            print("Couldn't get playlists for {}.\nProbably an error worth fixing before setting up your own custom job.".format(user.name))
-            print(e)
-            newUserPlaylists = {"Items": []}
-        newPlaylistHash = hashlib.md5(json.dumps(newUserPlaylists).encode("utf-8")).hexdigest()
+        newPlaylistHash = getLiveMixtapeHash(user=user, serverPlaylist=serverPlaylistName, playlistSuffix=playlistSuffix)
         saveMixtapeHash(userID=user.id, hash=newPlaylistHash)
         print("Saved hash for playlists now that mixtapes for {} are built".format(user.name))
     else:
