@@ -122,13 +122,13 @@ def getLiveMixtapeHash(user:common.UserInfo, serverPlaylist:str, playlistSuffix:
         newUserPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
         filteredPlaylists = []
         for playlist in newUserPlaylists["Items"]:
-            if playlist["name"] not in customTapeNames:
-                if playlistSuffix in playlist["name"]:
+            if playlist["Name"] not in customTapeNames:
+                if playlistSuffix in playlist["Name"]:
                     filteredPlaylists.append(playlist)
         newUserPlaylists["Items"] = filteredPlaylists
         newUserPlaylists["TotalRecordCount"] = len(filteredPlaylists)
     except Exception as e:
-        print("Couldn't get playlists for {}.\nProbably an error worth fixing before setting up your own custom job.".format(user.name))
+        print("Couldn't get playlists for {}.".format(user.name))
         print(e)
         newUserPlaylists = {"Items": []}
     newPlaylistHash = hashlib.md5(json.dumps(newUserPlaylists).encode("utf-8")).hexdigest()
