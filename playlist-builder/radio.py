@@ -117,7 +117,7 @@ def getLiveMixtapeHash(user:common.UserInfo, serverPlaylist:str, playlistSuffix:
     customTapeNames = []
     customTapeNames.append(serverPlaylistName)
     for tape in customMixtapes:
-        customTapeNames.append("{}{}".format(tape["name"], playlistSuffix))
+        customTapeNames.append("{}{}".format(tape.name, playlistSuffix))
     try:
         newUserPlaylists = jellyfin.getAllPlaylists(host=user.host, token=user.token, userID=user.id)
         filteredPlaylists = []
