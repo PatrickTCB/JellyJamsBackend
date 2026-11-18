@@ -180,7 +180,7 @@ for user in users:
     if mixtapeAge > tapeExpiry:
         print("The mixtapes have expired.")
         rebuildTapes = True
-    if oldMixtapeHash != currentMixtapeHash:
+    if oldMixtapeHash["hash"] != currentMixtapeHash:
         print("The mixtapes didn't match the expected hash")
         rebuildTapes = True
     if rebuildTapes:
