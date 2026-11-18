@@ -116,7 +116,7 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
 def getLiveMixtapeHash(user:common.UserInfo, serverPlaylist:str, playlistSuffix:str) -> str:
     customMixtapes = common.getUserPlaylists(userID=user.id)
     customTapeNames = []
-    customTapeNames.append(serverPlaylistName)
+    customTapeNames.append(serverPlaylist)
     for tape in customMixtapes:
         customTapeNames.append("{}{}".format(tape.name, playlistSuffix))
     try:
