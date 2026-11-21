@@ -19,7 +19,7 @@ while morePages:
         "sortOrder": "Ascending",
         "startIndex": startIndex,
     }
-    songs = jellyfin.getItemBySearch(host=user.host, token=user.id, userID=user.id, extraParams=extraParamas, limit=pageLimit)
+    songs = jellyfin.getItemBySearch(host=user.host, token=user.token, userID=user.id, extraParams=extraParamas, limit=pageLimit)
     lyricsQueries = []
     deleteQueries = []
     q = "INSERT INTO Lyrics VALUES(?,?)"
