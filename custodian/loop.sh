@@ -11,6 +11,7 @@ python3 -u setup.py
 while true; do
     echo "====="
     echo `date`
+    python3 -u populate-cache.py
     for job in custom-jobs/*.py; do
         echo "====="
         echo "Starting $job"
