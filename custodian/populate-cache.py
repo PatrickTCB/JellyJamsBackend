@@ -26,7 +26,7 @@ while morePages:
     deleteQueries = []
     q = "INSERT INTO Lyrics VALUES(?,?)"
     dq = "DELETE FROM Lyrics WHERE id = ?"
-    print("Checking out {}/{} songs.".format(songs["StartIndex"], songs["TotalRecordCount"]), end="\r")
+    print("Checking out {}/{} songs.".format(songs["StartIndex"], songs["TotalRecordCount"]))
     for song in songs["Items"]:
         if song.get("HasLyrics", False):
             lyricsRaw = jellyfin.getLyrics(host=user.host, token=user.token, userID=user.id, itemID=song["Id"])
@@ -59,6 +59,6 @@ while morePages:
     db.batchJob(queries=deleteQueries, tableName="Lyrics")
     # then insert
     db.batchJob(queries=lyricsQueries, tableName="Lyrics")
-    print("Finished page. Processed {} songs with {} db updates so far.".format(songsProcessed, dbUpdates), end="\r")
+    print("Finished page. Processed {} songs with {} db updates so far.".format(songsProcessed, dbUpdates))
     dbUpdates = dbUpdates + len(lyricsQueries)
-print("Done. Processed {} songs total resulting in {} songs having their lyrics updated in the db.".format(songsProcessed), dbUpdates)
+print("Done. Processed {} songs total resulting in {} songs having their lyrics updated in the db.".format(songsProcessed, dbUpdates))
