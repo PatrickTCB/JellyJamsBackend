@@ -388,7 +388,7 @@ def alchemySongs(userInfo:UserInfo, sourceSongs:list[str], songLimit:int):
 
 def songByLyrics(lyrics:str, songLimit:int=20) -> list:
     songIdList = []
-    q = "SELECT id, bm25(lyrics, 0.0, 0.0, 10.0, 1.0) AS rank FROM Lyrics WHERE lyrics MATCH ? ORDER BY rank LIMIT {};".format(songLimit)
+    q = "SELECT id, bm25(text, 0.0, 0.0, 10.0, 1.0) AS rank FROM Lyrics WHERE text MATCH ? ORDER BY rank LIMIT {};".format(songLimit)
     d = (lyrics,)
     r = db.select(query=q, datatuple=d, tableName="Lyrics")
     for row in r:
