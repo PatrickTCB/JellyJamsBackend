@@ -18,6 +18,7 @@ while morePages:
         "sortBy": "Artist,SortName",
         "sortOrder": "Ascending",
         "startIndex": startIndex,
+        "IncludeItemTypes": "Audio",
     }
     songs = jellyfin.getItemBySearch(host=user.host, token=user.token, userID=user.id, extraParams=extraParamas, limit=pageLimit)
     lyricsQueries = []
