@@ -26,7 +26,7 @@ while morePages:
     dq = "DELETE FROM Lyrics WHERE id = ?"
     print("Checking out {} songs. This page starts at {}".format(songs["TotalRecordCount"], songs["StartIndex"]))
     for song in songs["Items"]:
-        if song["HasLyrics"]:
+        if song.get("HasLyrics", False):
             lyricsRaw = jellyfin.getLyrics(host=user.host, token=user.token, userID=user.id, itemID=song["Id"])
             lyricsText = ""
             for line in lyricsRaw["Lyrics"]:
