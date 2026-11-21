@@ -13,6 +13,7 @@ morePages = True
 startIndex = 0
 songsProcessed = 0
 pageLimit = 200
+dbUpdates = 0
 while morePages:
     extraParamas = {
         "sortBy": "Artist,SortName",
@@ -60,4 +61,5 @@ while morePages:
     # then insert
     db.batchJob(queries=lyricsQueries, tableName="Lyrics")
     print("Finished page. Processed {} songs so far.".format(songsProcessed))
-print("Done. Processed {} songs total.".format(songsProcessed))
+    dbUpdates = dbUpdates + len(lyricsQueries)
+print("Done. Processed {} songs total resulting in {} songs having their lyrics updated in the db.".format(songsProcessed), dbUpdates)
