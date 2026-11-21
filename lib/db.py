@@ -4,7 +4,11 @@ import sqlcipher3
 import sqlite3
 import time
 
-def tableExists(tableName, verbose=False):
+class BatchQuery:
+    query: str = ""
+    dataTuple:tuple = ()
+
+def tableExists(tableName:str, verbose:bool=False):
     dbname="/data/jellyjams-server.db"
     tableExistsInDB = False
     con = sqlcipher3.connect(dbname)
@@ -22,7 +26,7 @@ def tableExists(tableName, verbose=False):
     con.close()
     return tableExistsInDB
 
-def create(useExisting=False, verbose=False):
+def create(useExisting:bool=False, verbose:bool=False):
     dbname="/data/jellyjams-server.db"
     if useExisting == False:
         alreadyExists = os.path.isfile(dbname)
@@ -40,7 +44,7 @@ def create(useExisting=False, verbose=False):
     con.close()
     return dbname
 
-def table(tableName, tableColumns, verbose=False):
+def table(tableName:bool, tableColumns:list[str], verbose:bool=False):
     dbname="/data/jellyjams-server.db"
     con = sqlcipher3.connect(dbname)
     con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
@@ -54,8 +58,28 @@ def table(tableName, tableColumns, verbose=False):
         cur.execute(query)
     con.commit()
     con.close()
-    
-def delete(query, datatuple, tableName, verbose=False):
+
+def indexedTable(tableName:str, indexedColumns:list[str], unindexedColumns:list[str], verbose:bool=False):
+    dbname="/data/jellyjams-server.db"
+    con = sqlcipher3.connect(dbname)
+    con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
+    con.execute("PRAGMA journal_mode=WAL")
+    cur = con.cursor()
+    #dupcheck
+    if tableExists(tableName=tableName, verbose=verbose) == False:
+        query = "CREATE VIRTUAL TABLE Lyrics USING fts5("
+        for column in unindexedColumns:
+            query = "{} {} UNINDEXED,".format(query, column)
+        for column in indexedColumns:
+            query = "{} {}, ".format(query, column)
+        query = "{} tokenize = 'unicode61');".format(query)
+        if verbose:
+            print("db query: {}".format(query))
+        cur.execute(query)
+    con.commit()
+    con.close()
+
+def delete(query:str, datatuple:tuple, tableName:str, verbose:bool=False):
     dbname="/data/jellyjams-server.db"
     con = sqlcipher3.connect(dbname)
     con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
@@ -83,7 +107,7 @@ def delete(query, datatuple, tableName, verbose=False):
     con.commit()
     con.close()
 
-def insert(query, datatuple, tableName, verbose=False):
+def insert(query:str, datatuple:tuple, tableName:str, verbose:bool=False):
     dbname="/data/jellyjams-server.db"
     con = sqlcipher3.connect(dbname)
     con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
@@ -116,7 +140,43 @@ def insert(query, datatuple, tableName, verbose=False):
     con.commit()
     con.close()
 
-def select(query, datatuple, tableName, verbose=False) -> list:
+def batchJob(queries:list[BatchQuery], tableName:str, verbose=False):
+    dbname="/data/jellyjams-server.db"
+    con = sqlcipher3.connect(dbname)
+    con.execute("PRAGMA key='{}'".format(os.environ['DB_PW']))
+    con.execute("PRAGMA journal_mode=WAL")
+    cur = con.cursor()
+    if tableExists(tableName=tableName, verbose=verbose) == False:
+        if verbose:
+            print("table {} dosen't exist in {}.".format(tableName, dbname))
+        return
+    else:
+        keepTrying = True
+        count = 0
+        # Writes should be re-tried if they fail at first. Only one thread can write to an SQLite DB at a time, and so multi-threaded scripts could run into problems.
+        if verbose:
+            print("Starting a run of {} queries".format(len(queries)))
+        for q in queries:
+            while keepTrying:
+                count = count + 1
+                try:
+                    cur.execute(q.query, q.dataTuple)
+                    if verbose:
+                        print("attempt {}: db: {} | {} | {}".format(count, dbname, q.query, q.dataTuple))
+                        tableSize = cur.execute("SELECT * FROM {}".format(tableName))
+                        print("{} already has {} entries".format(tableName, len(tableSize.fetchall())))
+                    #if there's an error it'll happen above so reaching this line is a sign that things worked.
+                    keepTrying = False
+                except Exception as e:
+                    time.sleep(count)
+                    if count > 5:
+                        keepTrying = False
+                    if verbose:
+                        print("Error on {}: {} on attempt {}. '{}'".format(dbname, e, count, q.query))
+    con.commit()
+    con.close()
+
+def select(query:str, datatuple:tuple, tableName:str, verbose:bool=False) -> list:
     dbname="/data/jellyjams-server.db"
     results = []
     con = sqlcipher3.connect(dbname)
