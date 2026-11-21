@@ -46,6 +46,9 @@ class UserPlaylistInfo(BaseModel):
 class ExtendedQueue(BaseModel):
     NewTrackIDs:List[str] = []
     Count:int = 0
+class SearchResults(BaseModel):
+    MatchingTrackIDs:List[str] = []
+    Count:int = 0
 class ItemsBanned(BaseModel):
     Items:dict = {}
     Success:bool = False
@@ -819,8 +822,8 @@ async def family_blend_removal(request:Request, userID:str):
     r.id = userID
     return r
 
-@app.get("/lyric-search", response_model=ExtendedQueue, responses={401: {"description": "User not found", "model": ErrorResponse}})
-async def lyric_search(request:Request, userID:str, query:str, limit:int=20) -> ExtendedQueue:
+@app.get("/lyric-search", response_model=SearchResults, responses={401: {"description": "User not found", "model": ErrorResponse}})
+async def lyric_search(request:Request, userID:str, query:str, limit:int=20) -> SearchResults:
     # Check to see if the user exists
     userInfo = common.getUserInfo(userID)
     if userInfo is None:
@@ -829,12 +832,11 @@ async def lyric_search(request:Request, userID:str, query:str, limit:int=20) -> 
     # User does exist
     try:
         songs = songByLyrics(lyrics=query, songLimit=limit)
-        alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
     except Exception as e:
         print("Couldn't get any songs from lyric search. Check the logs.{}\n".format(e))
         songs = []
-    r = ExtendedQueue()
-    r.NewTrackIDs = songs
+    r = SearchResults()
+    r.MatchingTrackIDs = songs
     r.Count = len(songs)
-    print("Got {} songs for the query '{}'.".format(len(alchemySongs), query))
+    print("Got {} songs for the query '{}'.".format(len(songs), query))
     return r
