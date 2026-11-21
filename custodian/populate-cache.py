@@ -30,7 +30,7 @@ while morePages:
         if song.get("HasLyrics", False):
             lyricsRaw = jellyfin.getLyrics(host=user.host, token=user.token, userID=user.id, itemID=song["Id"])
             lyricsText = ""
-            for line in lyricsRaw["text"]:
+            for line in lyricsRaw["Lyrics"]:
                 if lyricsText == "":
                     lyricsText = line["Text"]
                 else:
