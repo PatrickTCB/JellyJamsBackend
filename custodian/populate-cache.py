@@ -4,7 +4,7 @@ lyricsCache = {}
 lyricsCacheQ = "SELECT * FROM Lyrics"
 currentyricsCacheRaw = db.select(query=lyricsCacheQ, datatuple=(), tableName="Lyrics")
 for row in currentyricsCacheRaw:
-    lyricsCache[row["id"]] = row["lyrics"]
+    lyricsCache[row["id"]] = row["text"]
 
 
 user = common.getUsers()[0]
@@ -29,7 +29,7 @@ while morePages:
         if song.get("HasLyrics", False):
             lyricsRaw = jellyfin.getLyrics(host=user.host, token=user.token, userID=user.id, itemID=song["Id"])
             lyricsText = ""
-            for line in lyricsRaw["Lyrics"]:
+            for line in lyricsRaw["text"]:
                 if lyricsText == "":
                     lyricsText = line["Text"]
                 else:

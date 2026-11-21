@@ -41,6 +41,6 @@ mixtapeHashColumns = ["timestamp", "userID", "jobName", "hash"]
 db.table(tableName="CustomJobHash", tableColumns=mixtapeHashColumns)
 # Create 'lyrics' table
 lyricsUnindexedColumns = ["id"]
-lyricsIndexdColumns = ["lyrics"]
+lyricsIndexdColumns = ["text"]
 db.indexedTable(tableName="Lyrics", indexedColumns=lyricsIndexdColumns, unindexedColumns=lyricsUnindexedColumns)
 # Setup is done, now for the task loop.

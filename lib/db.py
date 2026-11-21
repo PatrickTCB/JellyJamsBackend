@@ -67,7 +67,7 @@ def indexedTable(tableName:str, indexedColumns:list[str], unindexedColumns:list[
     cur = con.cursor()
     #dupcheck
     if tableExists(tableName=tableName, verbose=verbose) == False:
-        query = "CREATE VIRTUAL TABLE Lyrics USING fts5("
+        query = "CREATE VIRTUAL TABLE {} USING fts5(".format(tableName)
         for column in unindexedColumns:
             query = "{} {} UNINDEXED,".format(query, column)
         for column in indexedColumns:
