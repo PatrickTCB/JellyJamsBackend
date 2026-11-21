@@ -71,6 +71,16 @@ def item(host:str, token:str, userID:str, itemID:str, verbose:bool=False) -> dic
     d = requests.get(url=url, headers=headers, params=params)
     return d.json()
 
+def getLyrics(host:str, token:str, userID:str, itemID:str, verbose:bool=False) -> dict:
+    authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
+    jPath = "/Audio/{}/Lyrics".format(itemID)
+    headers = {
+        "Authorization": authorization,
+    }
+    url = "{}{}".format(host, jPath)
+    d = requests.get(url=url, headers=headers)
+    return d.json()
+
 def favourites(host:str, token:str, userID:str, verbose:bool=False) -> dict:
     authorization = "MediaBrowser Client=\"Jelly Jams Backend\", Device=\"Jelly Jams Backend\", DeviceId=\"JJB-{}\", Token=\"{}\", Version=\"1.x\"".format(userID, token)
     jPath = "/Users/{}/Items".format(userID)
