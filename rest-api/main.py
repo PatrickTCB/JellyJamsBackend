@@ -386,6 +386,15 @@ def alchemySongs(userInfo:UserInfo, sourceSongs:list[str], songLimit:int):
     else:
         return alchemySongIDs
 
+def songByLyrics(lyrics:str, songLimit:int=20) -> list:
+    songIdList = []
+    q = "SELECT id, bm25(lyrics, 0.0, 0.0, 10.0, 1.0) AS rank FROM Lyrics WHERE lyrics MATCH ? ORDER BY rank LIMIT {};".format(songLimit)
+    d = (lyrics,)
+    r = db.select(query=q, datatuple=d, tableName="Lyrics")
+    for row in r:
+        songIdList.append(row["id"])
+    return songIdList
+
 app = FastAPI()
 
 @app.get("/ping", response_model=PingPong)
@@ -808,4 +817,24 @@ async def family_blend_removal(request:Request, userID:str):
     r = UserServerPlaylistStatus()
     r.inServerPlaylist = False
     r.id = userID
+    return r
+
+@app.get("/lyric-search", response_model=ExtendedQueue, responses={401: {"description": "User not found", "model": ErrorResponse}})
+async def lyric_search(request:Request, userID:str, query:str, limit:int=20) -> ExtendedQueue:
+    # Check to see if the user exists
+    userInfo = common.getUserInfo(userID)
+    if userInfo is None:
+        print("User {} could not be found".format(userID))
+        raise HTTPException(status_code=404, detail="User {} not found".format(userID))
+    # User does exist
+    try:
+        songs = songByLyrics(lyrics=query, songLimit=limit)
+        alchemySongs = audiomuse.instantPlaylist(query=query, limit=limit)
+    except Exception as e:
+        print("Couldn't get any songs from lyric search. Check the logs.{}\n".format(e))
+        songs = []
+    r = ExtendedQueue()
+    r.NewTrackIDs = songs
+    r.Count = len(songs)
+    print("Got {} songs for the query '{}'.".format(len(alchemySongs), query))
     return r
