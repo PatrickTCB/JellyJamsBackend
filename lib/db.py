@@ -151,12 +151,12 @@ def batchJob(queries:list[BatchQuery], tableName:str, verbose=False):
             print("table {} dosen't exist in {}.".format(tableName, dbname))
         return
     else:
-        keepTrying = True
-        count = 0
         # Writes should be re-tried if they fail at first. Only one thread can write to an SQLite DB at a time, and so multi-threaded scripts could run into problems.
         if verbose:
             print("Starting a run of {} queries".format(len(queries)))
         for q in queries:
+            keepTrying = True
+            count = 0
             while keepTrying:
                 count = count + 1
                 try:
