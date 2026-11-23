@@ -17,37 +17,40 @@ def resetMixTapes(user:common.UserInfo, playlistSuffix:str, serverPlaylist:str) 
                 jellyfin.deletePlaylist(host=user.host, token=user.token, userID=user.token, playlistID=playlist["Id"])
 
 def alchemyListExension(user:common.UserInfo, albumsUsed:list, artistsUsed:list, userLimits:dict, playlistSongs:list[dict], limit:int):
-    journeySongs = []
-    for song in playlistSongs:
-        journeySongs.append(song["Id"])
-    alchemyTracks = audiomuse.alchemy(addSongs=journeySongs, songLimit=limit)
-    for amSong in alchemyTracks:
-        jfItem = jellyfin.item(host=user.host, token=user.token, userID=user.id, itemID=amSong["item_id"])
-        allowed = True
-        songIds = []
-        songIds.append(jfItem["Id"])
-        songIds.append(jfItem["AlbumId"])
-        for genre in jfItem.get("GenreItems", []):
-            songIds.append(genre["Id"])
-        for artist in jfItem["ArtistItems"]:
-            songIds.append(artist["Id"])
-        for albumArtist in jfItem["AlbumArtists"]:
-            songIds.append(albumArtist["Id"])
-        if any(item in songIds for item in userBans):
-            print("{} isn't allowed in lists for {}.".format(song["Name"], user.name))
-            allowed = False
-        if albumsUsed.count(song["AlbumId"]) >= userLimits["sameAlbumLimit"]:
-            allowed = False
-        for artist in song["ArtistItems"]:
-            if artistsUsed.count(artist["Id"]) >= userLimits["sameArtistLimit"]:
+    loopCount = 0
+    while len(playlistSongs) < limit and loopCount < 10:
+        journeySongs = []
+        for song in playlistSongs:
+            journeySongs.append(song["Id"])
+        alchemyTracks = audiomuse.alchemy(addSongs=journeySongs, songLimit=limit)
+        for amSong in alchemyTracks:
+            jfItem = jellyfin.item(host=user.host, token=user.token, userID=user.id, itemID=amSong["item_id"])
+            allowed = True
+            songIds = []
+            songIds.append(jfItem["Id"])
+            songIds.append(jfItem["AlbumId"])
+            for genre in jfItem.get("GenreItems", []):
+                songIds.append(genre["Id"])
+            for artist in jfItem["ArtistItems"]:
+                songIds.append(artist["Id"])
+            for albumArtist in jfItem["AlbumArtists"]:
+                songIds.append(albumArtist["Id"])
+            if any(item in songIds for item in userBans):
+                print("{} isn't allowed in lists for {}.".format(song["Name"], user.name))
                 allowed = False
-        if len(playlistSongs) > (limit - 1):
-            allowed = False
-        if allowed:
-            albumsUsed.append(song["AlbumId"])
+            if albumsUsed.count(song["AlbumId"]) >= userLimits["sameAlbumLimit"]:
+                allowed = False
             for artist in song["ArtistItems"]:
-                artistsUsed.append(artist["Id"])
-            playlistSongs.append(jfItem)
+                if artistsUsed.count(artist["Id"]) >= userLimits["sameArtistLimit"]:
+                    allowed = False
+            if len(playlistSongs) > (limit - 1):
+                allowed = False
+            if allowed:
+                albumsUsed.append(song["AlbumId"])
+                for artist in song["ArtistItems"]:
+                    artistsUsed.append(artist["Id"])
+                playlistSongs.append(jfItem)
+        loopCount = loopCount + 1
     return playlistSongs
 
 def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourceBands:list, userLimits:dict, limit:int) -> list:
