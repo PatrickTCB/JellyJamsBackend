@@ -17,11 +17,8 @@ def resetMixTapes(user:common.UserInfo, playlistSuffix:str, serverPlaylist:str) 
                 jellyfin.deletePlaylist(host=user.host, token=user.token, userID=user.token, playlistID=playlist["Id"])
 
 def alchemyListExension(user:common.UserInfo, albumsUsed:list, artistsUsed:list, userLimits:dict, playlistSongs:list[dict], limit:int):
-    startSong = playlistSongs[0]
-    endSong = playlistSongs[-1]
-    playlistSongs.remove(endSong)
     journeySongs = []
-    for song in playlistSongs[1:-1]:
+    for song in playlistSongs:
         journeySongs.append(song["Id"])
     alchemyTracks = audiomuse.alchemy(addSongs=journeySongs, songLimit=limit)
     for amSong in alchemyTracks:
@@ -51,7 +48,6 @@ def alchemyListExension(user:common.UserInfo, albumsUsed:list, artistsUsed:list,
             for artist in song["ArtistItems"]:
                 artistsUsed.append(artist["Id"])
             playlistSongs.append(jfItem)
-    playlistSongs.append(endSong)
     return playlistSongs
 
 def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourceBands:list, userLimits:dict, limit:int) -> list:
@@ -129,7 +125,15 @@ def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourc
     # better, but AudioMuse-AI has no such preference. So it might give back too many repeats
     # In case that it does, we pad out the "journey" part of the playlist with some alchemy
     if len(playlistSongs) < int(0.75 * limit):
-        playlistSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=playlistSongs, limit=limit)
+        if len(playlistSongs) < 3:
+            # fewer than three songs means we're really low, and the song journey is basically a bust
+            # I'll return 0 songs and the script will just build some alchemy out of recent listens
+            playlistSongs = []
+        else:
+            endSong = playlistSongs[-1]
+            playlistSongs.remove(endSong)    
+            playlistSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=playlistSongs, limit=limit)
+            playlistSongs.append(endSong)
     return playlistSongs
 
 def artistAndFriendsPlaylist(user:common.UserInfo, userBans:list, recents:list, usedSourceBands:list, userLimits:dict, limit:int) -> dict:
