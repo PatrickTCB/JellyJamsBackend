@@ -111,14 +111,14 @@ def journeyPlaylist(user:common.UserInfo, recents:list, userBans:list, usedSourc
             if any(item in songIds for item in userBans):
                 print("{} isn't allowed in lists for {}.".format(song["Name"], user.name))
                 allowed = False
-            if albumsUsed.count(song["AlbumId"]) >= userLimits["sameAlbumLimit"]:
+            if albumsUsed.count(jfItem.get("AlbumId", "none")) >= userLimits["sameAlbumLimit"]:
                 allowed = False
-            for artist in song["ArtistItems"]:
+            for artist in jfItem["ArtistItems"]:
                 if artistsUsed.count(artist["Id"]) >= userLimits["sameArtistLimit"]:
                     allowed = False
             if allowed:
-                albumsUsed.append(song["AlbumId"])
-                for artist in song["ArtistItems"]:
+                albumsUsed.append(jfItem.get("AlbumId", "none"))
+                for artist in jfItem["ArtistItems"]:
                     artistsUsed.append(artist["Id"])
                 playlistSongs.append(jfItem)
     # I want to limit the number of repeated artists and albums, because I think that sounds
@@ -171,14 +171,14 @@ def artistAndFriendsPlaylist(user:common.UserInfo, userBans:list, recents:list, 
         if any(item in songIds for item in userBans):
             print("{} isn't allowed in lists for {}.".format(jellyfinItem["Name"], user.name))
             allowed = False
-        if albumsUsed.count(song["AlbumId"]) >= userLimits["sameAlbumLimit"]:
+        if albumsUsed.count(jellyfinItem.get("AlbumId", "none")) >= userLimits["sameAlbumLimit"]:
             allowed = False
-        for artist in song["ArtistItems"]:
+        for artist in jellyfinItem["ArtistItems"]:
             if artistsUsed.count(artist["Id"]) >= userLimits["sameArtistLimit"]:
                 allowed = False
         if allowed:
-            albumsUsed.append(song["AlbumId"])
-            for artist in song["ArtistItems"]:
+            albumsUsed.append(jellyfinItem.get("AlbumId", "none"))
+            for artist in jellyfinItem["ArtistItems"]:
                 artistsUsed.append(artist["Id"])
             tapeSongs.append(jellyfinItem)
     if len(tapeSongs) < int(0.75 * limit):
