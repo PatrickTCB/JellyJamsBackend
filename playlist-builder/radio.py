@@ -183,6 +183,7 @@ def artistAndFriendsPlaylist(user:common.UserInfo, userBans:list, recents:list, 
             tapeSongs.append(jellyfinItem)
     if len(tapeSongs) < int(0.75 * limit):
         tapeSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=tapeSongs, limit=limit)
+    random.shuffle(tapeSongs)
     return {"playlistName": playlistName, "tapeSongs": tapeSongs}
 
 def recentsToAlchemy(user:common.UserInfo, userBans:list, userLimits:dict, limit:int):
@@ -229,6 +230,7 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, userLimits:dict, limit
     if len(playlistSongs) < int(0.75 * limit):
         playlistSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=playlistSongs, limit=limit)
     print("Turned {} recent tracks into {} songs for {}.".format(len(allRecents), len(playlistSongs), user.name))
+    random.shuffle(playlistSongs)
     return playlistSongs
 
 def getLiveMixtapeHash(user:common.UserInfo, serverPlaylist:str, playlistSuffix:str) -> str:
