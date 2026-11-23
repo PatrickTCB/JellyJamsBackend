@@ -183,7 +183,7 @@ def artistAndFriendsPlaylist(user:common.UserInfo, userBans:list, recents:list, 
             tapeSongs.append(jellyfinItem)
     if len(tapeSongs) < int(0.75 * limit):
         tapeSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=tapeSongs, limit=limit)
-    return {"name": playlistName, "songs": tapeSongs}
+    return {"playlistName": playlistName, "tapeSongs": tapeSongs}
 
 def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
     allRecents = jellyfin.recentPlays(host=user.host, token=user.token, userID=user.id, includePartial=True)
