@@ -185,10 +185,12 @@ def artistAndFriendsPlaylist(user:common.UserInfo, userBans:list, recents:list, 
         tapeSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=tapeSongs, limit=limit)
     return {"playlistName": playlistName, "tapeSongs": tapeSongs}
 
-def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
+def recentsToAlchemy(user:common.UserInfo, userBans:list, userLimits:dict, limit:int):
     allRecents = jellyfin.recentPlays(host=user.host, token=user.token, userID=user.id, includePartial=True)
     addSongs = []
     subtractSongs = []
+    albumsUsed = []
+    artistsUsed = []
     usedSongs = []
     for song in allRecents:
         if song["Id"] != usedSongs:
@@ -214,8 +216,18 @@ def recentsToAlchemy(user:common.UserInfo, userBans:list, limit:int):
         if any(item in songIds for item in userBans):
             print("{} isn't allowed in lists for {}.".format(jellyfinItem["Name"], user.name))
             allowed = False
+        if albumsUsed.count(jellyfinItem.get("AlbumId", "none")) >= userLimits["sameAlbumLimit"]:
+            allowed = False
+        for artist in jellyfinItem["ArtistItems"]:
+            if artistsUsed.count(artist["Id"]) >= userLimits["sameArtistLimit"]:
+                allowed = False
         if allowed:
+            albumsUsed.append(jellyfinItem.get("AlbumId", "none"))
+            for artist in jellyfinItem["ArtistItems"]:
+                artistsUsed.append(artist["Id"])
             playlistSongs.append(jellyfinItem)
+    if len(playlistSongs) < int(0.75 * limit):
+        playlistSongs = alchemyListExension(user=user, albumsUsed=albumsUsed, artistsUsed=artistsUsed, userLimits=userLimits, playlistSongs=playlistSongs, limit=limit)
     print("Turned {} recent tracks into {} songs for {}.".format(len(allRecents), len(playlistSongs), user.name))
     return playlistSongs
 
@@ -331,7 +343,7 @@ for user in users:
                 tapeSongs = i["tapeSongs"]
             # This is a fallback option. But it's also deliberately called with tapeMethod 3
             if len(tapeSongs) == 0:
-                tapeSongs = recentsToAlchemy(user=user, userBans=userBans, limit=tapeSongLimit)
+                tapeSongs = recentsToAlchemy(user=user, userBans=userBans, userLimits=userLimits, limit=tapeSongLimit)
                 playlistName = "{} Alchemy{}".format(tapeSongs[0]["AlbumArtist"], playlistSuffix)
             if len(tapeSongs) > 0:
                 # At this point, the tapeSongs list has the songs we need
