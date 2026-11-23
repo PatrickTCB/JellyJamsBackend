@@ -308,20 +308,21 @@ for user in users:
                 # Method 1 - Take a journey from one song to another
                 tapeSongs = journeyPlaylist(user=user, recents=recents, userBans=userBans, usedSourceBands=usedSourceBands, limit=tapeSongLimit, userLimits=userLimits)
                 # The "source" artists are taken from the first and last songs
-                startSong = tapeSongs[0]
-                for artist in startSong["ArtistItems"]:
-                    usedSourceBands.append(artist["Id"])
-                for albumArtist in startSong["AlbumArtists"]:
-                    usedSourceBands.append(artist["Id"])
-                endSong = tapeSongs[-1]
-                for artist in endSong["ArtistItems"]:
-                    usedSourceBands.append(artist["Id"])
-                for albumArtist in endSong["AlbumArtists"]:
-                    usedSourceBands.append(artist["Id"])
-                if "AlbumArtist" in startSong.keys() and "AlbumArtist" in endSong.keys():
-                    playlistName = "{} to {}{}".format(startSong["AlbumArtist"], endSong["AlbumArtist"], playlistSuffix)
-                else:
-                    playlistName = "{} to {}{}".format(startSong["Name"], endSong["Name"], playlistSuffix)
+                if len(tapeSongs) > 0:
+                    startSong = tapeSongs[0]
+                    for artist in startSong["ArtistItems"]:
+                        usedSourceBands.append(artist["Id"])
+                    for albumArtist in startSong["AlbumArtists"]:
+                        usedSourceBands.append(artist["Id"])
+                    endSong = tapeSongs[-1]
+                    for artist in endSong["ArtistItems"]:
+                        usedSourceBands.append(artist["Id"])
+                    for albumArtist in endSong["AlbumArtists"]:
+                        usedSourceBands.append(artist["Id"])
+                    if "AlbumArtist" in startSong.keys() and "AlbumArtist" in endSong.keys():
+                        playlistName = "{} to {}{}".format(startSong["AlbumArtist"], endSong["AlbumArtist"], playlistSuffix)
+                    else:
+                        playlistName = "{} to {}{}".format(startSong["Name"], endSong["Name"], playlistSuffix)
             if tapeMethod == 2:
                 # Method 2 - Make a tape based on some artist the user has
                 # been listening to
